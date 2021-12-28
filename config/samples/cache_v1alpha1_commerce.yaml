@@ -1,0 +1,64 @@
+apiVersion: cache.commerce.k8sly.com/v1alpha1
+kind: Commerce
+metadata:
+  name: commerce
+  namespace: k8sly-system
+spec:
+  targetNamespace: k8sly-commerce
+
+  coreServices:
+    gatewayClient:
+      name: gatewayclient
+      image: localhost:5000/client:latest
+      cpu: 500m
+      memory: 100Mi
+
+    user:
+      name: user
+      image: localhost:5000/user:latest
+      cpu: 200m
+      memory: 100Mi
+
+    product:
+      name: product
+      image: localhost:5000/product:latest
+      cpu: 200m
+      memory: 100Mi
+
+    cart:
+      name: cart
+      image: localhost:5000/cart:latest
+      cpu: 200m
+      memory: 100Mi
+
+    inventory:
+      name: inventory
+      image: localhost:5000/inventory:latest
+      cpu: 200m
+      memory: 100Mi
+
+    othersBought:
+      name: othersbought
+      image: localhost:5000/othersbought:latest
+      cpu: 200m
+      memory: 100Mi
+
+    similarProducts:
+      name: similarproducts
+      image: localhost:5000/similarproducts:latest
+      cpu: 200m
+      memory: 100Mi
+
+  database:
+    secretName: k8sly-db-secret
+
+  hosts:
+    client:
+      hostname: api.local.k8sly.com
+      port: 80
+    admin:
+      hostname: admin.local.k8sly.com
+      port: 80
+
+  etcd:
+    replicas: 3
