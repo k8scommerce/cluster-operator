@@ -2,6 +2,7 @@ package commerce
 
 import (
 	"context"
+	"strings"
 
 	"github.com/go-logr/logr"
 	networking "k8s.io/api/networking/v1"
@@ -27,9 +28,11 @@ type gatewayIngress struct{}
 
 // Create returns a new route.
 func (r *gatewayIngress) Create(cr *cachev1alpha1.Commerce) *networking.Ingress {
-	if cr.Spec.CoreServices.GatewayClient == nil {
+	if cr.Spec.CoreMicroServices.GatewayClient == nil {
 		return &networking.Ingress{}
 	}
+
+	corsOrigins := strings.Join(cr.Spec.CorsOrigins, ", ")
 
 	annotations := map[string]string{
 		"kubernetes.io/ingress.class":                          "nginx",
@@ -38,7 +41,7 @@ func (r *gatewayIngress) Create(cr *cachev1alpha1.Commerce) *networking.Ingress 
 		"nginx.ingress.kubernetes.io/proxy-max-temp-file-size": "5m",
 		"nginx.org/client-max-body-size":                       "5m",
 		"nginx.ingress.kubernetes.io/enable-cors":              "true",
-		"nginx.ingress.kubernetes.io/cors-allow-origin":        "*",
+		"nginx.ingress.kubernetes.io/cors-allow-origin":        corsOrigins,
 		"external-dns.alpha.kubernetes.io/target":              "cr.Spec.Hosts.Client.Hostname",
 	}
 

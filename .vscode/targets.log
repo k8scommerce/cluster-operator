@@ -6,9 +6,8 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # PARTICULAR PURPOSE.
 
 # This program built for i386-apple-darwin11.3.0
- 
 
-# Make data base, printed on Mon Dec 27 10:22:28 2021
+# Make data base, printed on Tue Dec 28 18:21:43 2021
 
 # Variables
 
@@ -37,7 +36,7 @@ VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupp
 # environment
 _ = /usr/bin/make
 # environment
-VSCODE_PID = 851
+VSCODE_PID = 12353
 # environment
 arch = amd64
 # environment
@@ -57,7 +56,7 @@ VSCODE_VERBOSE_LOGGING = true
 # environment
 __CFBundleIdentifier = com.microsoft.VSCode
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /var/folders/p3/3g61cfqj15vb1zjgq9gt0tnr0000gn/T/vscode-ipc-a1d034d7-2a95-49a7-81de-47348a622a2e.sock
+VSCODE_IPC_HOOK_EXTHOST = /var/folders/p3/3g61cfqj15vb1zjgq9gt0tnr0000gn/T/vscode-ipc-de67e397-40b7-4235-b73d-877e93156251.sock
 # environment
 VSCODE_CWD = /
 # environment
@@ -230,9 +229,9 @@ os = darwin
 # Directories
 
 # ./bin (device 16777221, inode 31868325): 6 files, no impossibilities.
-# . (device 16777221, inode 31866103): 18 files, no impossibilities.
+# . (device 16777221, inode 31866103): 19 files, no impossibilities.
 
-# 24 files, no impossibilities in 2 directories.
+# 25 files, no impossibilities in 2 directories.
 
 # Implicit Rules
 
@@ -284,6 +283,7 @@ opm:
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
+ 
 #  commands to execute (from `Makefile', line 169):
 	@{ \
 	set -e ;\
@@ -294,7 +294,6 @@ opm:
 	}
 	
 
- 
 bundle: manifests kustomize
 #  Phony target (prerequisite of .PHONY).
 #  Implicit rule search has not been done.
@@ -515,6 +514,6 @@ install: manifests kustomize
 # strcache size: total = 4096 / max = 4096 / min = 4096 / avg = 4096
 # strcache free: total = 4087 / max = 4087 / min = 4087 / avg = 4087
 
-# Finished Make data base on Mon Dec 27 10:22:28 2021
+# Finished Make data base on Tue Dec 28 18:21:43 2021
 
  

@@ -25,7 +25,7 @@ KIND_CLUSTER_NAME="v123"
 KIND_CLUSTER_NAME="${KIND_CLUSTER_NAME:-kind}"
 KIND_CLUSTER_OPTS="--name ${KIND_CLUSTER_NAME}"
 
-kind delete cluster $KIND_CLUSTER_OPTS
+kind delete cluster $KIND_CLUSTER_OPTS || true
 
 if [ -n "${KIND_CLUSTER_IMAGE}" ]; then
   KIND_CLUSTER_OPTS="${KIND_CLUSTER_OPTS} --image ${KIND_CLUSTER_IMAGE}"
@@ -41,7 +41,7 @@ case "${kind_version}" in
   ;;
 esac
 
-docker network disconnect "${kind_network}" "localrivet-db"
+docker network disconnect "${kind_network}" "localrivet-db" || true
 
 # create registry container unless it already exists
 running="$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)"

@@ -15,7 +15,7 @@ const (
 	// SecretsOkta is the name of the secrets file that contains the okta client credentials.
 	SecretsOkta = "client-credentials"
 	// SecretsOktaNamespace is the namespace where the okta secrets file is located.
-	SecretsOktaNamespace = "npe-system"
+	SecretsOktaNamespace = "k8sly-system"
 	// StateStart defines the start state value.
 	StateStart = "START"
 	// StateFinal defines the final state value.
