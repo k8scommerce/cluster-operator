@@ -48,6 +48,8 @@ var commerceFinalizer = "cache.commerce.k8sly.com/finalizer"
 //+kubebuilder:rbac:groups=cache.commerce.k8sly.com,resources=commerces,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=cache.commerce.k8sly.com,resources=commerces/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=cache.commerce.k8sly.com,resources=commerces/finalizers,verbs=update
+//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
 
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
@@ -82,51 +84,6 @@ func (r *CommerceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 	}
 
-	// Create and/or sync the Secrets from yaml to a Secret
-	// if requeue, err := r.secretsSync(ctx, deploymentFound, isNewGeneration); err != nil || requeue {
-	// 	return ctrl.Result{Requeue: requeue}, err
-	// }
-
-	// Notify START status.
-	// if requeue, err := r.notifier(ctx, deploymentFound, models.JobStatusProcessing); err != nil || requeue {
-	// 	r.Recorder.Event(deploymentFound, corev1.EventTypeWarning, "Notifier start error", err.Error())
-	// 	return ctrl.Result{Requeue: requeue}, err
-	// }
-
-	// found := &appsv1.Deployment{}
-	// err = r.Get(ctx, types.NamespacedName{Name: commerce.Name, Namespace: commerce.Namespace}, found)
-	// if err != nil && errors.IsNotFound(err) {
-	// 	// Define a new deployment
-	// 	dep := r.deploymentForCommerce(commerce)
-	// 	log.Info("Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
-	// 	err = r.Create(ctx, dep)
-	// 	if err != nil {
-	// 		log.Error(err, "Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
-	// 		return ctrl.Result{}, err
-	// 	}
-	// 	// Deployment created successfully - return and requeue
-	// 	return ctrl.Result{Requeue: true}, nil
-	// } else if err != nil {
-	// 	log.Error(err, "Failed to get Deployment")
-	// 	return ctrl.Result{}, err
-	// }
-
-	// isNewGeneration := false
-	// if commerce.Generation != commerce.Status.ObservedGeneration {
-	// 	isNewGeneration = true
-	// 	patch := client.MergeFrom(commerce.DeepCopy())
-	// 	commerce.Status.ObservedGeneration = commerce.Generation
-	// 	if err = r.Status().Patch(ctx, commerce, patch); err != nil {
-	// 		r.Log.Error(err, "Failed to update Commerce status during Reconcile")
-	// 		return ctrl.Result{}, err
-	// 	}
-	// }
-
-	// // Create and/or sync the Secrets from yaml to a Secret
-	// if requeue, err := r.secretsSync(ctx, commerce); err != nil || requeue {
-	// 	return ctrl.Result{Requeue: requeue}, err
-	// }
-
 	if commerce.Spec.TargetNamespace != "" {
 		// Reconcile Target Namespace
 		result, err = r.reconcileNamespace(ctx, commerce, log)
@@ -141,57 +98,57 @@ func (r *CommerceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 	}
 
-	if commerce.Spec.CoreServices.Product != nil {
+	if commerce.Spec.CoreMicroServices.Product != nil {
 		// Reconcile Product object
-		result, err = r.reconcileProduct(ctx, commerce, log)
+		result, err = r.reconcileDeployment(ctx, commerce, NewProduct(), log)
 		if err != nil {
 			return result, err
 		}
 	}
 
-	if commerce.Spec.CoreServices.Inventory != nil {
+	if commerce.Spec.CoreMicroServices.Inventory != nil {
 		// Reconcile Inventory object
-		result, err = r.reconcileInventory(ctx, commerce, log)
+		result, err = r.reconcileDeployment(ctx, commerce, NewInventory(), log)
 		if err != nil {
 			return result, err
 		}
 	}
 
-	if commerce.Spec.CoreServices.OthersBought != nil {
+	if commerce.Spec.CoreMicroServices.OthersBought != nil {
 		// Reconcile OthersBought object
-		result, err = r.reconcileOthersBought(ctx, commerce, log)
+		result, err = r.reconcileDeployment(ctx, commerce, NewOthersBought(), log)
 		if err != nil {
 			return result, err
 		}
 	}
 
-	if commerce.Spec.CoreServices.SimilarProducts != nil {
+	if commerce.Spec.CoreMicroServices.SimilarProducts != nil {
 		// Reconcile SimilarProducts object
-		result, err = r.reconcileSimilarProducts(ctx, commerce, log)
+		result, err = r.reconcileDeployment(ctx, commerce, NewSimilarProducts(), log)
 		if err != nil {
 			return result, err
 		}
 	}
 
-	if commerce.Spec.CoreServices.User != nil {
+	if commerce.Spec.CoreMicroServices.User != nil {
 		// Reconcile User object
-		result, err = r.reconcileUser(ctx, commerce, log)
+		result, err = r.reconcileDeployment(ctx, commerce, NewUser(), log)
 		if err != nil {
 			return result, err
 		}
 	}
 
-	if commerce.Spec.CoreServices.Cart != nil {
+	if commerce.Spec.CoreMicroServices.Cart != nil {
 		// Reconcile Cart object
-		result, err = r.reconcileCart(ctx, commerce, log)
+		result, err = r.reconcileDeployment(ctx, commerce, NewCart(), log)
 		if err != nil {
 			return result, err
 		}
 	}
 
-	if commerce.Spec.CoreServices.GatewayClient != nil {
+	if commerce.Spec.CoreMicroServices.GatewayClient != nil {
 		// Reconcile GatwayClient object
-		result, err = r.reconcileGatewayClient(ctx, commerce, log)
+		result, err = r.reconcileDeployment(ctx, commerce, NewGatewayClient(), log)
 		if err != nil {
 			return result, err
 		}
@@ -295,4 +252,24 @@ func (r *CommerceReconciler) getRunningEtcdPods(cr *cachev1alpha1.Commerce) int3
 	}
 
 	return running
+}
+
+func ensureResourceDefaults(cr *cachev1alpha1.Commerce, microService *cachev1alpha1.MicroService) {
+	if cr.Spec.CoreMicroServices.GatewayClient != nil {
+		// limits
+		if microService.Resources.Limits.CPU == "" {
+			microService.Resources.Limits.CPU = "500m"
+		}
+		if microService.Resources.Limits.Memory == "" {
+			microService.Resources.Limits.Memory = "256Mi"
+		}
+
+		// requests
+		if microService.Resources.Requests.CPU == "" {
+			microService.Resources.Requests.CPU = "500m"
+		}
+		if microService.Resources.Requests.Memory == "" {
+			microService.Resources.Requests.Memory = "256Mi"
+		}
+	}
 }

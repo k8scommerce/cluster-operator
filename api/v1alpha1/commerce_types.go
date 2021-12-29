@@ -28,59 +28,105 @@ const ConfigMapRef = "k8sly-config"
 // SecretRef is the name of the secret created by the operator-environment.
 const SecretRef = "k8sly-secret"
 
-type CommerceHost struct {
-	Hostname string `json:"hostname,omitempty"`
-	Port     int32  `json:"port,omitempty"`
+type Probe struct {
+	// +kubebuilder:default:=8080
+	Port int `json:"port,omitempty"`
+	// +kubebuilder:default:=5
+	InitialDelaySeconds int32 `json:"initialDelaySeconds,omitempty"`
+	// +kubebuilder:default:=10
+	PeriodSeconds int32 `json:"periodSeconds,omitempty"`
+}
+type Host struct {
+	Hostname string `json:"hostname"`
+	Scheme   string `json:"scheme"`
 }
 
-type CommerceHosts struct {
-	Client CommerceHost `json:"client,omitempty"`
-	Admin  CommerceHost `json:"admin,omitempty"`
+type Hosts struct {
+	Client Host `json:"client"`
+	Admin  Host `json:"admin"`
+}
+type ResourceRequests struct {
+	// +kubebuilder:default:="500m"
+	CPU string `json:"cpu,omitempty"`
+	// +kubebuilder:default:="256Mi"
+	Memory string `json:"memory,omitempty"`
 }
 
-type CommerceResources struct {
+type ResourceLimits struct {
+	// +kubebuilder:default:="500m"
+	CPU string `json:"cpu,omitempty"`
+	// +kubebuilder:default:="256Mi"
+	Memory string `json:"memory,omitempty"`
 }
 
-type CommerceService struct {
-	Name            string            `json:"name,omitempty"`
-	Image           string            `json:"image,omitempty"`
-	Command         []string          `json:"command,omitempty"`
-	Args            []string          `json:"args,omitempty"`
-	ContainerPort   int32             `json:"port,omitempty"`
-	CPU             string            `json:"cpu,omitempty"`
-	Memory          string            `json:"memory,omitempty"`
+type Resources struct {
+	// +optional
+	Requests ResourceRequests `json:"requests,omitempty"`
+	// +optional
+	Limits ResourceLimits `json:"limits,omitempty"`
+}
+type Lifecycle struct {
+	PreStopCommand []string `json:"command,omitempty"`
+}
+
+type MicroService struct {
+	// +kubebuilder:validation:Required
+	Name string `json:"name"`
+	// +kubebuilder:validation:Required
+	Image   string   `json:"image"`
+	Command []string `json:"command,omitempty"`
+	Args    []string `json:"args,omitempty"`
+	// +kubebuilder:validation:Required
+	ContainerPort int32 `json:"port,omitempty"`
+	// +optional
 	EnvironmentVars map[string]string `json:"vars,omitempty"`
+	// +optional
+	Lifecycle Lifecycle `json:"lifecycle,omitempty"`
+	// +optional
+	Resources Resources `json:"resources,omitempty"`
+	// +optional
+	ReadinessProbe Probe `json:"readinessProbe,omitempty"`
+	// +optional
+	LivenessProbe Probe `json:"livenessProbe,omitempty"`
 
 	//+kubebuilder:validation:Minimum=2
 	Replicas int32 `json:"replicas,omitempty"`
 }
 
-type CommerceCoreServices struct {
-	GatewayClient   *CommerceService `json:"gatewayClient,omitempty"`
-	User            *CommerceService `json:"user,omitempty"`
-	Product         *CommerceService `json:"product,omitempty"`
-	Cart            *CommerceService `json:"cart,omitempty"`
-	Inventory       *CommerceService `json:"inventory,omitempty"`
-	OthersBought    *CommerceService `json:"othersBought,omitempty"`
-	SimilarProducts *CommerceService `json:"similarProducts,omitempty"`
+type CoreMicroServices struct {
+	// +kubebuilder:validation:Required
+	GatewayClient *MicroService `json:"gatewayClient,omitempty"`
+	// +kubebuilder:validation:Required
+	User *MicroService `json:"user,omitempty"`
+	// +kubebuilder:validation:Required
+	Product *MicroService `json:"product,omitempty"`
+	// +kubebuilder:validation:Required
+	Cart *MicroService `json:"cart,omitempty"`
+	// +kubebuilder:validation:Required
+	Inventory *MicroService `json:"inventory,omitempty"`
+	// +kubebuilder:validation:Required
+	OthersBought *MicroService `json:"othersBought,omitempty"`
+	// +kubebuilder:validation:Required
+	SimilarProducts *MicroService `json:"similarProducts,omitempty"`
 }
 
-type CommerceDatabaseConnection struct {
+type Database struct {
 	SecretName string `json:"secretName,omitempty"`
 }
 
-type CommerceEtcd struct {
+type Etcd struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 }
 
 // CommerceSpec defines the desired state of Commerce
 type CommerceSpec struct {
-	TargetNamespace string                      `json:"targetNamespace"`
-	CoreServices    CommerceCoreServices        `json:"coreServices"`
-	AddOnServices   []CommerceService           `json:"addOnServices,omitempty"`
-	Hosts           CommerceHosts               `json:"hosts"`
-	Database        *CommerceDatabaseConnection `json:"database"`
-	Etcd            CommerceEtcd                `json:"etcd"`
+	TargetNamespace   string            `json:"targetNamespace"`
+	CorsOrigins       []string          `json:"corsOrigins"`
+	Hosts             Hosts             `json:"hosts"`
+	CoreMicroServices CoreMicroServices `json:"coreMicroServices"`
+	AddOnServices     []MicroService    `json:"addOnMicroServices,omitempty"`
+	Database          *Database         `json:"database,omitempty"`
+	Etcd              Etcd              `json:"etcd"`
 }
 
 // CommerceStatus defines the observed state of Commerce

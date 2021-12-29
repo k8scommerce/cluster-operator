@@ -29,9 +29,15 @@ type gatewayService struct{}
 
 // Create returns a new service.
 func (s *gatewayService) Create(cr *cachev1alpha1.Commerce) *corev1.Service {
-	if cr.Spec.CoreServices.GatewayClient == nil {
+	if cr.Spec.CoreMicroServices.GatewayClient == nil {
 		return &corev1.Service{}
 	}
+
+	var port int32 = 80
+	if cr.Spec.Hosts.Client.Scheme == "https" {
+		port = 443
+	}
+
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "gateway-client-service",
@@ -41,14 +47,14 @@ func (s *gatewayService) Create(cr *cachev1alpha1.Commerce) *corev1.Service {
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				"app": cr.Spec.CoreServices.GatewayClient.Name,
+				"app": cr.Spec.CoreMicroServices.GatewayClient.Name,
 			},
 			Ports: []corev1.ServicePort{
 				{
-					Name:       "http",
+					Name:       cr.Spec.Hosts.Client.Scheme,
 					Protocol:   corev1.ProtocolTCP,
-					Port:       80,
-					TargetPort: intstr.FromInt(int(cr.Spec.CoreServices.GatewayClient.ContainerPort)),
+					Port:       port,
+					TargetPort: intstr.FromInt(int(cr.Spec.CoreMicroServices.GatewayClient.ContainerPort)),
 				},
 			},
 		},

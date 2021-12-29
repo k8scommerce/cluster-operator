@@ -33,48 +33,67 @@ func (r *CommerceReconciler) handleFinalizer(ctx context.Context, cr *cachev1alp
 		return nil
 	}
 
-	// delete the gateway cliet service
-	if err = r.deleteGatewayClient(ctx, cr); err != nil {
+	// delete etcd
+	{
+		var i int32
+		for i = 0; i < *cr.Spec.Etcd.Replicas; i++ {
+			if err = r.deleteEtcdPod(ctx, cr, i); err != nil {
+				return err
+			}
+			if err = r.deleteService(ctx, cr, NewEtcd().CreatePodService(cr, i)); err != nil {
+				return err
+			}
+		}
+		if err = r.deleteService(ctx, cr, NewEtcd().CreateClientService(cr)); err != nil {
+			return err
+		}
+	}
+
+	// delete the microservices
+	{
+		// delete the gateway cliet service
+		if err = r.deleteDeployment(ctx, cr, NewGatewayClient()); err != nil {
+			return err
+		}
+
+		// delete the cart service
+		if err = r.deleteDeployment(ctx, cr, NewCart()); err != nil {
+			return err
+		}
+
+		// delete the inventory service
+		if err = r.deleteDeployment(ctx, cr, NewInventory()); err != nil {
+			return err
+		}
+
+		// delete the othersBought service
+		if err = r.deleteDeployment(ctx, cr, NewOthersBought()); err != nil {
+			return err
+		}
+
+		// delete the similarProducts service
+		if err = r.deleteDeployment(ctx, cr, NewSimilarProducts()); err != nil {
+			return err
+		}
+
+		// delete the user service
+		if err = r.deleteDeployment(ctx, cr, NewUser()); err != nil {
+			return err
+		}
+
+		// delete the product service
+		if err = r.deleteDeployment(ctx, cr, NewProduct()); err != nil {
+			return err
+		}
+	}
+
+	// delete the gateway service
+	if err = r.deleteService(ctx, cr, NewGatewayService().Create(cr)); err != nil {
 		return err
 	}
 
-	// delete the cart service
-	if err = r.deleteCart(ctx, cr); err != nil {
-		return err
-	}
-
-	// delete the inventory service
-	if err = r.deleteInventory(ctx, cr); err != nil {
-		return err
-	}
-
-	// delete the othersBought service
-	if err = r.deleteOthersBought(ctx, cr); err != nil {
-		return err
-	}
-
-	// delete the similarProducts service
-	if err = r.deleteSimilarProducts(ctx, cr); err != nil {
-		return err
-	}
-
-	// delete the user service
-	if err = r.deleteUser(ctx, cr); err != nil {
-		return err
-	}
-
-	// delete the product service
-	if err = r.deleteProduct(ctx, cr); err != nil {
-		return err
-	}
-
-	// delete the service
-	if err = r.deleteGatewayService(ctx, cr); err != nil {
-		return err
-	}
-
-	// delete the ingress
-	if err = r.deleteGatewayIngress(ctx, cr); err != nil {
+	// delete the gateway ingress
+	if err = r.deleteIngress(ctx, cr, NewGatewayIngress().Create(cr)); err != nil {
 		return err
 	}
 
@@ -93,17 +112,54 @@ func (r *CommerceReconciler) handleFinalizer(ctx context.Context, cr *cachev1alp
 	return r.Update(ctx, cr)
 }
 
-func (r *CommerceReconciler) deleteGatewayIngress(ctx context.Context, cr *cachev1alpha1.Commerce) error {
-	i := NewGatewayIngress()
-	ing := i.Create(cr)
-	ingress := &networking.Ingress{}
-	err := r.Get(ctx, types.NamespacedName{Name: ing.Name, Namespace: ing.Namespace}, ingress)
+func (r *CommerceReconciler) deleteDeployment(ctx context.Context, cr *cachev1alpha1.Commerce, s FinalizableDeployment) error {
+	dep := s.Create(cr)
+	depFound := &appsv1.Deployment{}
+	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
 	if err != nil && errors.IsNotFound(err) {
-		// not found, so we are good to go
 		return nil
 	}
 	if err != nil {
-		// another type of error, return it
+		return err
+	}
+	err = r.Client.Delete(ctx, dep)
+	if err != nil {
+		r.Log.Error(err, "Failed to delete Deployment")
+		return err
+	}
+	r.Log.Info(fmt.Sprintf("Deployment deleted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
+
+	return nil
+}
+
+func (r *CommerceReconciler) deleteEtcdPod(ctx context.Context, cr *cachev1alpha1.Commerce, id int32) error {
+	s := NewEtcd()
+	dep := s.CreatePod(cr, id)
+	depFound := &corev1.Pod{}
+	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
+	if err != nil && errors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	err = r.Client.Delete(ctx, dep)
+	if err != nil {
+		r.Log.Error(err, "Failed to delete Pod")
+		return err
+	}
+	r.Log.Info(fmt.Sprintf("Pod deleted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
+
+	return nil
+}
+
+func (r *CommerceReconciler) deleteIngress(ctx context.Context, cr *cachev1alpha1.Commerce, ing *networking.Ingress) error {
+	ingress := &networking.Ingress{}
+	err := r.Get(ctx, types.NamespacedName{Name: ing.Name, Namespace: ing.Namespace}, ingress)
+	if err != nil && errors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
 		return err
 	}
 	err = r.Client.Delete(ctx, ingress)
@@ -116,17 +172,13 @@ func (r *CommerceReconciler) deleteGatewayIngress(ctx context.Context, cr *cache
 	return nil
 }
 
-func (r *CommerceReconciler) deleteGatewayService(ctx context.Context, cr *cachev1alpha1.Commerce) error {
-	s := NewGatewayService()
-	svc := s.Create(cr)
+func (r *CommerceReconciler) deleteService(ctx context.Context, cr *cachev1alpha1.Commerce, svc *corev1.Service) error {
 	service := &corev1.Service{}
 	err := r.Get(ctx, types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, service)
 	if err != nil && errors.IsNotFound(err) {
-		// not found, so we are good to go
 		return nil
 	}
 	if err != nil {
-		// another type of error, return it
 		return err
 	}
 	err = r.Client.Delete(ctx, service)
@@ -135,174 +187,6 @@ func (r *CommerceReconciler) deleteGatewayService(ctx context.Context, cr *cache
 		return err
 	}
 	r.Log.Info(fmt.Sprintf("Service deleted: %s", "Name: "+svc.Name+" Namespace: "+svc.Namespace))
-
-	return nil
-}
-
-func (r *CommerceReconciler) deleteProduct(ctx context.Context, cr *cachev1alpha1.Commerce) error {
-	s := NewProduct()
-	dep := s.Create(cr)
-	depFound := &appsv1.Deployment{}
-	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
-	if err != nil && errors.IsNotFound(err) {
-		// not found, so we are good to go
-		return nil
-	}
-	if err != nil {
-		// another type of error, return it
-		return err
-	}
-	err = r.Client.Delete(ctx, dep)
-	if err != nil {
-		// r.Recorder.Event(cr, corev1.EventTypeWarning, "Delete Deployment Failed", "Name: "+dep.Name+" Namespace: "+dep.Namespace)
-		r.Log.Error(err, "Failed to delete Deployment")
-		return err
-	}
-	r.Log.Info(fmt.Sprintf("Deployment deeted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
-
-	return nil
-}
-
-func (r *CommerceReconciler) deleteCart(ctx context.Context, cr *cachev1alpha1.Commerce) error {
-	s := NewCart()
-	dep := s.Create(cr)
-	depFound := &appsv1.Deployment{}
-	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
-	if err != nil && errors.IsNotFound(err) {
-		// not found, so we are good to go
-		return nil
-	}
-	if err != nil {
-		// another type of error, return it
-		return err
-	}
-	err = r.Client.Delete(ctx, dep)
-	if err != nil {
-		// r.Recorder.Event(cr, corev1.EventTypeWarning, "Delete Deployment Failed", "Name: "+dep.Name+" Namespace: "+dep.Namespace)
-		r.Log.Error(err, "Failed to delete Deployment")
-		return err
-	}
-	r.Log.Info(fmt.Sprintf("Deployment deeted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
-
-	return nil
-}
-
-func (r *CommerceReconciler) deleteInventory(ctx context.Context, cr *cachev1alpha1.Commerce) error {
-	s := NewInventory()
-	dep := s.Create(cr)
-	depFound := &appsv1.Deployment{}
-	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
-	if err != nil && errors.IsNotFound(err) {
-		// not found, so we are good to go
-		return nil
-	}
-	if err != nil {
-		// another type of error, return it
-		return err
-	}
-	err = r.Client.Delete(ctx, dep)
-	if err != nil {
-		// r.Recorder.Event(cr, corev1.EventTypeWarning, "Delete Deployment Failed", "Name: "+dep.Name+" Namespace: "+dep.Namespace)
-		r.Log.Error(err, "Failed to delete Deployment")
-		return err
-	}
-	r.Log.Info(fmt.Sprintf("Deployment deeted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
-
-	return nil
-}
-
-func (r *CommerceReconciler) deleteOthersBought(ctx context.Context, cr *cachev1alpha1.Commerce) error {
-	s := NewOthersBought()
-	dep := s.Create(cr)
-	depFound := &appsv1.Deployment{}
-	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
-	if err != nil && errors.IsNotFound(err) {
-		// not found, so we are good to go
-		return nil
-	}
-	if err != nil {
-		// another type of error, return it
-		return err
-	}
-	err = r.Client.Delete(ctx, dep)
-	if err != nil {
-		// r.Recorder.Event(cr, corev1.EventTypeWarning, "Delete Deployment Failed", "Name: "+dep.Name+" Namespace: "+dep.Namespace)
-		r.Log.Error(err, "Failed to delete Deployment")
-		return err
-	}
-	r.Log.Info(fmt.Sprintf("Deployment deeted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
-
-	return nil
-}
-
-func (r *CommerceReconciler) deleteSimilarProducts(ctx context.Context, cr *cachev1alpha1.Commerce) error {
-	s := NewSimilarProducts()
-	dep := s.Create(cr)
-	depFound := &appsv1.Deployment{}
-	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
-	if err != nil && errors.IsNotFound(err) {
-		// not found, so we are good to go
-		return nil
-	}
-	if err != nil {
-		// another type of error, return it
-		return err
-	}
-	err = r.Client.Delete(ctx, dep)
-	if err != nil {
-		// r.Recorder.Event(cr, corev1.EventTypeWarning, "Delete Deployment Failed", "Name: "+dep.Name+" Namespace: "+dep.Namespace)
-		r.Log.Error(err, "Failed to delete Deployment")
-		return err
-	}
-	r.Log.Info(fmt.Sprintf("Deployment deeted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
-
-	return nil
-}
-
-func (r *CommerceReconciler) deleteUser(ctx context.Context, cr *cachev1alpha1.Commerce) error {
-	s := NewUser()
-	dep := s.Create(cr)
-	depFound := &appsv1.Deployment{}
-	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
-	if err != nil && errors.IsNotFound(err) {
-		// not found, so we are good to go
-		return nil
-	}
-	if err != nil {
-		// another type of error, return it
-		return err
-	}
-	err = r.Client.Delete(ctx, dep)
-	if err != nil {
-		// r.Recorder.Event(cr, corev1.EventTypeWarning, "Delete Deployment Failed", "Name: "+dep.Name+" Namespace: "+dep.Namespace)
-		r.Log.Error(err, "Failed to delete Deployment")
-		return err
-	}
-	r.Log.Info(fmt.Sprintf("Deployment deeted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
-
-	return nil
-}
-
-func (r *CommerceReconciler) deleteGatewayClient(ctx context.Context, cr *cachev1alpha1.Commerce) error {
-	s := NewGatewayClient()
-	dep := s.Create(cr)
-	depFound := &appsv1.Deployment{}
-	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
-	if err != nil && errors.IsNotFound(err) {
-		// not found, so we are good to go
-		return nil
-	}
-	if err != nil {
-		// another type of error, return it
-		return err
-	}
-	err = r.Client.Delete(ctx, dep)
-	if err != nil {
-		// r.Recorder.Event(cr, corev1.EventTypeWarning, "Delete Deployment Failed", "Name: "+dep.Name+" Namespace: "+dep.Namespace)
-		r.Log.Error(err, "Failed to delete Deployment")
-		return err
-	}
-	r.Log.Info(fmt.Sprintf("Deployment deeted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
 
 	return nil
 }

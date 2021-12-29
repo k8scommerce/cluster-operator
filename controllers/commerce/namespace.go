@@ -53,7 +53,8 @@ func (r *CommerceReconciler) reconcileNamespace(ctx context.Context, commerce *c
 // Create namespaceFinalDelete. If return true, requeue.
 func (r *CommerceReconciler) namespaceFinalDelete(ctx context.Context, commerce *cachev1alpha1.Commerce) error {
 
-	if commerce.ObjectMeta.Namespace != "" {
+	// if commerce.ObjectMeta.Namespace != "" {
+	if commerce.Spec.TargetNamespace != "" {
 		ns := &corev1.Namespace{}
 		ns.Name = commerce.Spec.TargetNamespace
 		if err := r.Client.Get(ctx, types.NamespacedName{Name: ns.Name}, ns); err == nil {
