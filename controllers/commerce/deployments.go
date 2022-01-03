@@ -3,7 +3,8 @@ package commerce
 import (
 	"fmt"
 
-	cachev1alpha1 "github.com/localrivet/k8sly-operator/api/v1alpha1"
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
+	"github.com/k8scommerce/cluster-operator/controllers/constant"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -115,7 +116,7 @@ func (d *microServiceDeployment) Create(cr *cachev1alpha1.Commerce) *appsv1.Depl
 			Name: "timezone",
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
-					Path: "/usr/share/zoneinfo/America/Denver",
+					Path: "/usr/share/zoneinfo/Etc/UTC",
 				},
 			},
 		},
@@ -163,7 +164,7 @@ func (d *microServiceDeployment) Create(cr *cachev1alpha1.Commerce) *appsv1.Depl
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        microService.Name,
-			Namespace:   cr.Spec.TargetNamespace,
+			Namespace:   constant.TargetNamespace,
 			Annotations: annotations,
 		},
 		Spec: appsv1.DeploymentSpec{

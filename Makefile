@@ -28,8 +28,8 @@ BUNDLE_METADATA_OPTS ?= $(BUNDLE_CHANNELS) $(BUNDLE_DEFAULT_CHANNEL)
 # This variable is used to construct full image tags for bundle and catalog images.
 #
 # For example, running 'make bundle-build bundle-push catalog-build catalog-push' will build and push both
-# commerce.k8sly.com/k8sly-operator-bundle:$VERSION and commerce.k8sly.com/k8sly-operator-catalog:$VERSION.
-IMAGE_TAG_BASE ?= commerce.k8sly.com/k8sly-operator
+# commerce.k8scommerce.com/cluster-operator-bundle:$VERSION and commerce.k8scommerce.com/cluster-operator-catalog:$VERSION.
+IMAGE_TAG_BASE ?= commerce.k8scommerce.com/cluster-operator
 
 # BUNDLE_IMG defines the image:tag used for the bundle.
 # You can use it as an arg. (E.g make bundle-build BUNDLE_IMG=<some-registry>/<project-name-bundle>:<tag>)
@@ -112,7 +112,7 @@ install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests kustomize docker-build docker-push ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 

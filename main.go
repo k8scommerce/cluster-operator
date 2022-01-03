@@ -28,11 +28,13 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	cachev1alpha1 "github.com/localrivet/k8sly-operator/api/v1alpha1"
-	"github.com/localrivet/k8sly-operator/controllers/commerce"
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
+	"github.com/k8scommerce/cluster-operator/controllers/commerce"
+	"github.com/k8scommerce/cluster-operator/controllers/constant"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -71,7 +73,12 @@ func main() {
 		Port:                   9443,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "01b75b92.commerce.k8sly.com",
+		LeaderElectionID:       "01b75b92.commerce.k8scommerce.com",
+		Namespace:              "",
+		NewCache: cache.MultiNamespacedCacheBuilder([]string{
+			constant.ManagerNamespace,
+			constant.TargetNamespace,
+		}),
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

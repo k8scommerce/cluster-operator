@@ -8,4 +8,4 @@ webhook:
   port: 9443
 leaderElection:
   leaderElect: true
-  resourceName: 01b75b92.commerce.k8sly.com
+  resourceName: 01b75b92.commerce.k8scommerce.com

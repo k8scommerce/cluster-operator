@@ -1,4 +1,4 @@
-module github.com/localrivet/k8sly-operator
+module github.com/k8scommerce/cluster-operator
 
 go 1.16
 

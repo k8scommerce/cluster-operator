@@ -22,7 +22,8 @@ import (
 	"strings"
 
 	"github.com/go-logr/logr"
-	cachev1alpha1 "github.com/localrivet/k8sly-operator/api/v1alpha1"
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
+	"github.com/k8scommerce/cluster-operator/controllers/constant"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,7 +36,7 @@ const (
 	EtcdImage = "quay.io/coreos/etcd:latest"
 )
 
-//go:generate mockgen -destination ../internal/controllers/commerce/mocks/etcd.go -package=Mocks github.com/localrivet/k8sly/controllers/commerce mode Deployment
+//go:generate mockgen -destination ../internal/controllers/commerce/mocks/etcd.go -package=Mocks github.com/k8scommerce/k8scommerce/controllers/commerce mode Deployment
 // Etcd interface.
 type Etcd interface {
 	CreateClientService(cr *cachev1alpha1.Commerce) *corev1.Service
@@ -57,7 +58,7 @@ type etcd struct{}
 // kind: Service
 // metadata:
 //   name: etcd-client
-//   namespace: k8sly-system
+//   namespace: k8scommerce-system
 // spec:
 //   ports:
 //     - name: etcd-client-port
@@ -74,7 +75,7 @@ func (d *etcd) CreateClientService(cr *cachev1alpha1.Commerce) *corev1.Service {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "etcd-client",
-			Namespace: cr.Spec.TargetNamespace,
+			Namespace: constant.TargetNamespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
@@ -100,7 +101,7 @@ func (d *etcd) CreateClientService(cr *cachev1alpha1.Commerce) *corev1.Service {
 //   labels:
 //     etcd_node: etcd0
 //   name: etcd0
-//   namespace: k8sly-system
+//   namespace: k8scommerce-system
 // spec:
 //   ports:
 //     - name: client
@@ -124,7 +125,7 @@ func (d *etcd) CreatePodService(cr *cachev1alpha1.Commerce, id int32) *corev1.Se
 				"etcd_node": fmt.Sprintf("etcd%d", id),
 			},
 			Name:      fmt.Sprintf("etcd%d", id),
-			Namespace: cr.Spec.TargetNamespace,
+			Namespace: constant.TargetNamespace,
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{
@@ -156,7 +157,7 @@ func (d *etcd) CreatePodService(cr *cachev1alpha1.Commerce, id int32) *corev1.Se
 //     app: etcd
 //     etcd_node: etcd0
 //   name: etcd0
-//   namespace: k8sly-system
+//   namespace: k8scommerce-system
 // spec:
 //   containers:
 //     - command:
@@ -206,7 +207,7 @@ func (d *etcd) CreatePod(cr *cachev1alpha1.Commerce, id int32) *corev1.Pod {
 				"etcd_node": fmt.Sprintf("etcd%d", id),
 			},
 			Name:      fmt.Sprintf("etcd%d", id),
-			Namespace: cr.Spec.TargetNamespace,
+			Namespace: constant.TargetNamespace,
 		},
 		Spec: corev1.PodSpec{
 			Containers: []corev1.Container{

@@ -12,7 +12,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	cachev1alpha1 "github.com/localrivet/k8sly-operator/api/v1alpha1"
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
 )
 
 // addFinalizer adds a given finalizer to a given CR.
@@ -56,8 +56,23 @@ func (r *CommerceReconciler) handleFinalizer(ctx context.Context, cr *cachev1alp
 			return err
 		}
 
+		// delete the gateway admin service
+		if err = r.deleteDeployment(ctx, cr, NewGatewayAdmin()); err != nil {
+			return err
+		}
+
 		// delete the cart service
 		if err = r.deleteDeployment(ctx, cr, NewCart()); err != nil {
+			return err
+		}
+
+		// delete the customer service
+		if err = r.deleteDeployment(ctx, cr, NewCustomer()); err != nil {
+			return err
+		}
+
+		// delete the email service
+		if err = r.deleteDeployment(ctx, cr, NewEmail()); err != nil {
 			return err
 		}
 
@@ -71,8 +86,28 @@ func (r *CommerceReconciler) handleFinalizer(ctx context.Context, cr *cachev1alp
 			return err
 		}
 
+		// delete the payment service
+		if err = r.deleteDeployment(ctx, cr, NewPayment()); err != nil {
+			return err
+		}
+
+		// delete the product service
+		if err = r.deleteDeployment(ctx, cr, NewProduct()); err != nil {
+			return err
+		}
+
+		// delete the shipping service
+		if err = r.deleteDeployment(ctx, cr, NewShipping()); err != nil {
+			return err
+		}
+
 		// delete the similarProducts service
 		if err = r.deleteDeployment(ctx, cr, NewSimilarProducts()); err != nil {
+			return err
+		}
+
+		// delete the store service
+		if err = r.deleteDeployment(ctx, cr, NewStore()); err != nil {
 			return err
 		}
 
@@ -81,19 +116,29 @@ func (r *CommerceReconciler) handleFinalizer(ctx context.Context, cr *cachev1alp
 			return err
 		}
 
-		// delete the product service
-		if err = r.deleteDeployment(ctx, cr, NewProduct()); err != nil {
+		// delete the warehouse service
+		if err = r.deleteDeployment(ctx, cr, NewWarehouse()); err != nil {
 			return err
 		}
 	}
 
-	// delete the gateway service
-	if err = r.deleteService(ctx, cr, NewGatewayService().Create(cr)); err != nil {
+	// delete the gateway client service
+	if err = r.deleteService(ctx, cr, NewGatewayClientService().Create(cr)); err != nil {
 		return err
 	}
 
-	// delete the gateway ingress
-	if err = r.deleteIngress(ctx, cr, NewGatewayIngress().Create(cr)); err != nil {
+	// delete the gateway client ingress
+	if err = r.deleteIngress(ctx, cr, NewGatewayClientIngress().Create(cr)); err != nil {
+		return err
+	}
+
+	// delete the gateway admin service
+	if err = r.deleteService(ctx, cr, NewGatewayAdminService().Create(cr)); err != nil {
+		return err
+	}
+
+	// delete the gateway admin ingress
+	if err = r.deleteIngress(ctx, cr, NewGatewayAdminIngress().Create(cr)); err != nil {
 		return err
 	}
 
@@ -103,7 +148,7 @@ func (r *CommerceReconciler) handleFinalizer(ctx context.Context, cr *cachev1alp
 	}
 
 	// delete the crd
-	if err = r.Client.Delete(ctx, cr); err != nil {
+	if err = r.Delete(ctx, cr); err != nil {
 		return err
 	}
 
@@ -122,7 +167,7 @@ func (r *CommerceReconciler) deleteDeployment(ctx context.Context, cr *cachev1al
 	if err != nil {
 		return err
 	}
-	err = r.Client.Delete(ctx, dep)
+	err = r.Delete(ctx, dep)
 	if err != nil {
 		r.Log.Error(err, "Failed to delete Deployment")
 		return err
@@ -143,7 +188,7 @@ func (r *CommerceReconciler) deleteEtcdPod(ctx context.Context, cr *cachev1alpha
 	if err != nil {
 		return err
 	}
-	err = r.Client.Delete(ctx, dep)
+	err = r.Delete(ctx, dep)
 	if err != nil {
 		r.Log.Error(err, "Failed to delete Pod")
 		return err
@@ -162,7 +207,7 @@ func (r *CommerceReconciler) deleteIngress(ctx context.Context, cr *cachev1alpha
 	if err != nil {
 		return err
 	}
-	err = r.Client.Delete(ctx, ingress)
+	err = r.Delete(ctx, ingress)
 	if err != nil {
 		r.Log.Error(err, "Failed to delete Ingress")
 		return err
@@ -181,7 +226,7 @@ func (r *CommerceReconciler) deleteService(ctx context.Context, cr *cachev1alpha
 	if err != nil {
 		return err
 	}
-	err = r.Client.Delete(ctx, service)
+	err = r.Delete(ctx, service)
 	if err != nil {
 		r.Log.Error(err, "Failed to delete Service")
 		return err

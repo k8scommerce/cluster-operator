@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cart
+  namespace: k8scommerce
+  labels:
+    app: cart
+spec:
+  replicas: 2
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: cart
+  template:
+    metadata:
+      labels:
+        app: cart
+    spec:
+      containers:
+      - name: cart
+        image: 127.0.0.1:5000/cart:latest
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sh","-c","sleep 5"]
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        resources:
+          requests:
+            cpu: 128m
+            memory: 128Mi
+          limits:
+            cpu: 1000m
+            memory: 1024Mi
+        volumeMounts:
+        - name: timezone
+          mountPath: /etc/localtime
+      imagePullSecrets:
+      - name: k8scommerce-db
+      volumes:
+        - name: timezone
+          hostPath:
+            path: /usr/share/zoneinfo/Etc/UTC
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cart-svc
+  namespace: k8scommerce
+spec:
+  ports:
+    - port: 8080
+  selector:
+    app: cart
+
+---
+
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cart-hpa-c
+  namespace: k8scommerce
+  labels:
+    app: cart-hpa-c
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cart
+  minReplicas: 2
+  maxReplicas: 15
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      targetAverageUtilization: 80
+
+---
+
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cart-hpa-m
+  namespace: k8scommerce
+  labels:
+    app: cart-hpa-m
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: cart
+  minReplicas: 2
+  maxReplicas: 15
+  metrics:
+  - type: Resource
+    resource:
+      name: memory
+      targetAverageUtilization: 80

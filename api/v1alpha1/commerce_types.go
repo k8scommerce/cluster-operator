@@ -23,10 +23,10 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 // ConfigMapRef is the name of the environment variable configMap created by the operator-environment.
-const ConfigMapRef = "k8sly-config"
+const ConfigMapRef = "k8scommerce-config"
 
 // SecretRef is the name of the secret created by the operator-environment.
-const SecretRef = "k8sly-secret"
+const SecretRef = "k8scommerce-secret"
 
 type Probe struct {
 	// +kubebuilder:default:=8080
@@ -97,17 +97,31 @@ type CoreMicroServices struct {
 	// +kubebuilder:validation:Required
 	GatewayClient *MicroService `json:"gatewayClient,omitempty"`
 	// +kubebuilder:validation:Required
-	User *MicroService `json:"user,omitempty"`
-	// +kubebuilder:validation:Required
-	Product *MicroService `json:"product,omitempty"`
+	GatewayAdmin *MicroService `json:"gatewayAdmin,omitempty"`
 	// +kubebuilder:validation:Required
 	Cart *MicroService `json:"cart,omitempty"`
+	// +kubebuilder:validation:Required
+	Customer *MicroService `json:"customer,omitempty"`
+	// +kubebuilder:validation:Required
+	Email *MicroService `json:"email,omitempty"`
 	// +kubebuilder:validation:Required
 	Inventory *MicroService `json:"inventory,omitempty"`
 	// +kubebuilder:validation:Required
 	OthersBought *MicroService `json:"othersBought,omitempty"`
 	// +kubebuilder:validation:Required
+	Payment *MicroService `json:"payment,omitempty"`
+	// +kubebuilder:validation:Required
+	Product *MicroService `json:"product,omitempty"`
+	// +kubebuilder:validation:Required
+	Shipping *MicroService `json:"shipping,omitempty"`
+	// +kubebuilder:validation:Required
 	SimilarProducts *MicroService `json:"similarProducts,omitempty"`
+	// +kubebuilder:validation:Required
+	Store *MicroService `json:"store,omitempty"`
+	// +kubebuilder:validation:Required
+	User *MicroService `json:"user,omitempty"`
+	// +kubebuilder:validation:Required
+	Warehouse *MicroService `json:"warehouse,omitempty"`
 }
 
 type Database struct {
@@ -120,7 +134,6 @@ type Etcd struct {
 
 // CommerceSpec defines the desired state of Commerce
 type CommerceSpec struct {
-	TargetNamespace   string            `json:"targetNamespace"`
 	CorsOrigins       []string          `json:"corsOrigins"`
 	Hosts             Hosts             `json:"hosts"`
 	CoreMicroServices CoreMicroServices `json:"coreMicroServices"`
