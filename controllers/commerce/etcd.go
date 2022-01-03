@@ -58,7 +58,7 @@ type etcd struct{}
 // kind: Service
 // metadata:
 //   name: etcd-client
-//   namespace: k8scommerce-system
+//   namespace: k8scom-system
 // spec:
 //   ports:
 //     - name: etcd-client-port
@@ -101,7 +101,7 @@ func (d *etcd) CreateClientService(cr *cachev1alpha1.Commerce) *corev1.Service {
 //   labels:
 //     etcd_node: etcd0
 //   name: etcd0
-//   namespace: k8scommerce-system
+//   namespace: k8scom-system
 // spec:
 //   ports:
 //     - name: client
@@ -157,7 +157,7 @@ func (d *etcd) CreatePodService(cr *cachev1alpha1.Commerce, id int32) *corev1.Se
 //     app: etcd
 //     etcd_node: etcd0
 //   name: etcd0
-//   namespace: k8scommerce-system
+//   namespace: k8scom-system
 // spec:
 //   containers:
 //     - command:
