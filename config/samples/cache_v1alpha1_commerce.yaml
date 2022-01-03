@@ -2,7 +2,7 @@ apiVersion: cache.commerce.k8scommerce.com/v1alpha1
 kind: Commerce
 metadata:
   name: commerce
-  namespace: k8scommerce-system
+  namespace: k8scom-system
 spec:
   corsOrigins:
     - http://local.k8scommerce.com:4200
