@@ -142,18 +142,23 @@ func (in *CoreMicroServices) DeepCopyInto(out *CoreMicroServices) {
 		*out = new(MicroService)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.User != nil {
-		in, out := &in.User, &out.User
-		*out = new(MicroService)
-		(*in).DeepCopyInto(*out)
-	}
-	if in.Product != nil {
-		in, out := &in.Product, &out.Product
+	if in.GatewayAdmin != nil {
+		in, out := &in.GatewayAdmin, &out.GatewayAdmin
 		*out = new(MicroService)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.Cart != nil {
 		in, out := &in.Cart, &out.Cart
+		*out = new(MicroService)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Customer != nil {
+		in, out := &in.Customer, &out.Customer
+		*out = new(MicroService)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Email != nil {
+		in, out := &in.Email, &out.Email
 		*out = new(MicroService)
 		(*in).DeepCopyInto(*out)
 	}
@@ -167,8 +172,38 @@ func (in *CoreMicroServices) DeepCopyInto(out *CoreMicroServices) {
 		*out = new(MicroService)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Payment != nil {
+		in, out := &in.Payment, &out.Payment
+		*out = new(MicroService)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Product != nil {
+		in, out := &in.Product, &out.Product
+		*out = new(MicroService)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Shipping != nil {
+		in, out := &in.Shipping, &out.Shipping
+		*out = new(MicroService)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.SimilarProducts != nil {
 		in, out := &in.SimilarProducts, &out.SimilarProducts
+		*out = new(MicroService)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Store != nil {
+		in, out := &in.Store, &out.Store
+		*out = new(MicroService)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.User != nil {
+		in, out := &in.User, &out.User
+		*out = new(MicroService)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.Warehouse != nil {
+		in, out := &in.Warehouse, &out.Warehouse
 		*out = new(MicroService)
 		(*in).DeepCopyInto(*out)
 	}

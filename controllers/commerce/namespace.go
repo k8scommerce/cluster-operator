@@ -11,7 +11,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/go-logr/logr"
-	cachev1alpha1 "github.com/localrivet/k8sly-operator/api/v1alpha1"
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
+	"github.com/k8scommerce/cluster-operator/controllers/constant"
 )
 
 // Create namespaceCreate. If return true, requeue.
@@ -20,7 +21,7 @@ func (r *CommerceReconciler) reconcileNamespace(ctx context.Context, commerce *c
 	r.Log.Info(fmt.Sprintf("Starting namespaceCreate %s", commerce.GetName()))
 
 	ns := &corev1.Namespace{}
-	ns.Name = commerce.Spec.TargetNamespace
+	ns.Name = constant.TargetNamespace
 
 	err := r.Client.Get(ctx, types.NamespacedName{Name: ns.Name}, ns)
 	if err != nil && errors.IsNotFound(err) {
@@ -54,9 +55,9 @@ func (r *CommerceReconciler) reconcileNamespace(ctx context.Context, commerce *c
 func (r *CommerceReconciler) namespaceFinalDelete(ctx context.Context, commerce *cachev1alpha1.Commerce) error {
 
 	// if commerce.ObjectMeta.Namespace != "" {
-	if commerce.Spec.TargetNamespace != "" {
+	if constant.TargetNamespace != "" {
 		ns := &corev1.Namespace{}
-		ns.Name = commerce.Spec.TargetNamespace
+		ns.Name = constant.TargetNamespace
 		if err := r.Client.Get(ctx, types.NamespacedName{Name: ns.Name}, ns); err == nil {
 
 			// r.Recorder.Event(commerce, corev1.EventTypeNormal, "Deleting Namespace", fmt.Sprintf("Namespace: %s", ns.Name))

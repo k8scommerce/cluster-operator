@@ -5,7 +5,7 @@ metadata:
   name: commerce-viewer-role
 rules:
 - apiGroups:
-  - cache.commerce.k8sly.com
+  - cache.commerce.k8scommerce.com
   resources:
   - commerces
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - cache.commerce.k8sly.com
+  - cache.commerce.k8scommerce.com
   resources:
   - commerces/status
   verbs:

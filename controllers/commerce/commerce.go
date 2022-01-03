@@ -32,8 +32,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/go-logr/logr"
-	cachev1alpha1 "github.com/localrivet/k8sly-operator/api/v1alpha1"
-	"github.com/localrivet/k8sly-operator/controllers/constant"
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
+	"github.com/k8scommerce/cluster-operator/controllers/constant"
 )
 
 // CommerceReconciler reconciles a Commerce object
@@ -43,13 +43,21 @@ type CommerceReconciler struct {
 	Log    logr.Logger
 }
 
-var commerceFinalizer = "cache.commerce.k8sly.com/finalizer"
+var commerceFinalizer = "cache.commerce.k8scommerce.com/finalizer"
 
-//+kubebuilder:rbac:groups=cache.commerce.k8sly.com,resources=commerces,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=cache.commerce.k8sly.com,resources=commerces/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=cache.commerce.k8sly.com,resources=commerces/finalizers,verbs=update
-//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;
+//+kubebuilder:rbac:groups=cache.commerce.k8scommerce.com,resources=commerces,verbs=*
+//+kubebuilder:rbac:groups=cache.commerce.k8scommerce.com,resources=commerces/status,verbs=get;update;patch
+//+kubebuilder:rbac:groups=cache.commerce.k8scommerce.com,resources=commerces/finalizers,verbs=update
+//+kubebuilder:rbac:groups=apps,resources=deployments,verbs=*
+//+kubebuilder:rbac:groups=core,resources=services,verbs=*
+//+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
+//+kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*
+//+kubebuilder:rbac:groups=*,resources=namespaces,verbs=*
+//+kubebuilder:rbac:groups=*,resources=pods,verbs=*
+//+kubebuilder:rbac:groups=*,resources=deployments,verbs=*
+//+kubebuilder:rbac:groups=*,resources=configmaps;secrets,verbs=*
+//+kubebuilder:rbac:groups=*,resources=events,verbs=*
+//+kubebuilder:rbac:groups=*,resources=endpoints,verbs=get;watch;list
 
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
@@ -57,8 +65,8 @@ func (r *CommerceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	log := r.Log.WithValues("commerce", req.NamespacedName)
 
 	var result reconcile.Result
-	// check the namespace exists first
 
+	// check the namespace exists first
 	commerce := &cachev1alpha1.Commerce{}
 	err := r.Get(ctx, req.NamespacedName, commerce)
 	if err != nil {
@@ -71,98 +79,206 @@ func (r *CommerceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		}
 	}
 
-	if commerce.IsBeingDeleted() {
+	// if we're not being delete add the finalizer
+	if !commerce.IsBeingDeleted() {
+		// only add the finalizer if it doesn't already exist
+		if !commerce.HasFinalizer(commerceFinalizer) {
+			r.Log.Info(fmt.Sprintf("AddFinalizer for %v", req.NamespacedName))
+			if err := r.addFinalizer(ctx, commerce, log); err != nil {
+				return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %w", err)
+			}
+		}
+
+		// Is this a new generation?
+		// isNewGeneration := false
+		if commerce.Generation != commerce.Status.ObservedGeneration {
+			// isNewGeneration = true
+			patch := client.MergeFrom(commerce.DeepCopy())
+			commerce.Status.ObservedGeneration = commerce.Generation
+			if err = r.Status().Patch(ctx, commerce, patch); err != nil {
+				r.Log.Error(err, "Failed to update Deployment status during Reconcile")
+				return ctrl.Result{}, err
+			}
+		}
+
+		// // Create and/or sync the Secrets from yaml to a Secret
+		// if requeue, err := r.secretsSync(ctx, deploymentFound, isNewGeneration); err != nil || requeue {
+		// 	return ctrl.Result{Requeue: requeue}, err
+		// }
+
+		// // Reconcile environment variables.
+		// if requeue, err := r.environmentVariablesSync(ctx, deploymentFound); err != nil || requeue {
+		// 	return ctrl.Result{Requeue: requeue}, err
+		// }
+
+		// add the services, deployments, pods, etc...
+		if constant.TargetNamespace != "" {
+			// Reconcile Target Namespace
+			result, err = r.reconcileNamespace(ctx, commerce, log)
+			if err != nil {
+				return result, err
+			}
+
+			// Reconcile Etc
+			// result, err = r.reconcileEtcd(ctx, commerce, log)
+			// if err != nil {
+			// 	return result, err
+			// }
+		}
+
+		// GatewayClient
+		if commerce.Spec.CoreMicroServices.GatewayClient != nil {
+			// Reconcile GatwayClient object
+			result, err = r.reconcileDeployment(ctx, commerce, NewGatewayClient(), log)
+			if err != nil {
+				return result, err
+			}
+
+			// Reconcile GatwayService object
+			result, err = r.reconcileGatewayClientService(ctx, commerce, log)
+			if err != nil {
+				return result, err
+			}
+
+			// Reconcile GatwayIngress object
+			result, err = r.reconcileGatewayClientIngress(ctx, commerce, log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// GatewayAdmin
+		if commerce.Spec.CoreMicroServices.GatewayAdmin != nil {
+			// Reconcile GatwayAdmin object
+			result, err = r.reconcileDeployment(ctx, commerce, NewGatewayAdmin(), log)
+			if err != nil {
+				return result, err
+			}
+
+			// Reconcile GatwayService object
+			result, err = r.reconcileGatewayAdminService(ctx, commerce, log)
+			if err != nil {
+				return result, err
+			}
+
+			// Reconcile GatwayIngress object
+			result, err = r.reconcileGatewayAdminIngress(ctx, commerce, log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// Cart
+		if commerce.Spec.CoreMicroServices.Cart != nil {
+			// Reconcile Cart object
+			result, err = r.reconcileDeployment(ctx, commerce, NewCart(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// Customer
+		if commerce.Spec.CoreMicroServices.Customer != nil {
+			// Reconcile Customer object
+			result, err = r.reconcileDeployment(ctx, commerce, NewCustomer(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// Email
+		if commerce.Spec.CoreMicroServices.Email != nil {
+			// Reconcile Email object
+			result, err = r.reconcileDeployment(ctx, commerce, NewEmail(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// Inventory
+		if commerce.Spec.CoreMicroServices.Inventory != nil {
+			// Reconcile Inventory object
+			result, err = r.reconcileDeployment(ctx, commerce, NewInventory(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// OthersBought
+		if commerce.Spec.CoreMicroServices.OthersBought != nil {
+			// Reconcile OthersBought object
+			result, err = r.reconcileDeployment(ctx, commerce, NewOthersBought(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// Payment
+		if commerce.Spec.CoreMicroServices.Payment != nil {
+			// Reconcile Payment object
+			result, err = r.reconcileDeployment(ctx, commerce, NewPayment(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// Product
+		if commerce.Spec.CoreMicroServices.Product != nil {
+			// Reconcile Product object
+			result, err = r.reconcileDeployment(ctx, commerce, NewProduct(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// Shipping
+		if commerce.Spec.CoreMicroServices.Shipping != nil {
+			// Reconcile Shipping object
+			result, err = r.reconcileDeployment(ctx, commerce, NewShipping(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// SimilarProducts
+		if commerce.Spec.CoreMicroServices.SimilarProducts != nil {
+			// Reconcile SimilarProducts object
+			result, err = r.reconcileDeployment(ctx, commerce, NewSimilarProducts(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// Store
+		if commerce.Spec.CoreMicroServices.Store != nil {
+			// Reconcile Store object
+			result, err = r.reconcileDeployment(ctx, commerce, NewStore(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// User
+		if commerce.Spec.CoreMicroServices.User != nil {
+			// Reconcile User object
+			result, err = r.reconcileDeployment(ctx, commerce, NewUser(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+		// Warehouse
+		if commerce.Spec.CoreMicroServices.Warehouse != nil {
+			// Reconcile Warehouse object
+			result, err = r.reconcileDeployment(ctx, commerce, NewWarehouse(), log)
+			if err != nil {
+				return result, err
+			}
+		}
+
+	} else {
 		if err := r.handleFinalizer(ctx, commerce, log); err != nil {
 			return ctrl.Result{}, fmt.Errorf("error when handling finalizer: %w", err)
-		}
-	}
-
-	if !commerce.HasFinalizer(commerceFinalizer) {
-		r.Log.Info(fmt.Sprintf("AddFinalizer for %v", req.NamespacedName))
-		if err := r.addFinalizer(ctx, commerce, log); err != nil {
-			return ctrl.Result{}, fmt.Errorf("error when adding finalizer: %w", err)
-		}
-	}
-
-	if commerce.Spec.TargetNamespace != "" {
-		// Reconcile Target Namespace
-		result, err = r.reconcileNamespace(ctx, commerce, log)
-		if err != nil {
-			return result, err
-		}
-
-		// Reconcile Etc
-		result, err = r.reconcileEtcd(ctx, commerce, log)
-		if err != nil {
-			return result, err
-		}
-	}
-
-	if commerce.Spec.CoreMicroServices.Product != nil {
-		// Reconcile Product object
-		result, err = r.reconcileDeployment(ctx, commerce, NewProduct(), log)
-		if err != nil {
-			return result, err
-		}
-	}
-
-	if commerce.Spec.CoreMicroServices.Inventory != nil {
-		// Reconcile Inventory object
-		result, err = r.reconcileDeployment(ctx, commerce, NewInventory(), log)
-		if err != nil {
-			return result, err
-		}
-	}
-
-	if commerce.Spec.CoreMicroServices.OthersBought != nil {
-		// Reconcile OthersBought object
-		result, err = r.reconcileDeployment(ctx, commerce, NewOthersBought(), log)
-		if err != nil {
-			return result, err
-		}
-	}
-
-	if commerce.Spec.CoreMicroServices.SimilarProducts != nil {
-		// Reconcile SimilarProducts object
-		result, err = r.reconcileDeployment(ctx, commerce, NewSimilarProducts(), log)
-		if err != nil {
-			return result, err
-		}
-	}
-
-	if commerce.Spec.CoreMicroServices.User != nil {
-		// Reconcile User object
-		result, err = r.reconcileDeployment(ctx, commerce, NewUser(), log)
-		if err != nil {
-			return result, err
-		}
-	}
-
-	if commerce.Spec.CoreMicroServices.Cart != nil {
-		// Reconcile Cart object
-		result, err = r.reconcileDeployment(ctx, commerce, NewCart(), log)
-		if err != nil {
-			return result, err
-		}
-	}
-
-	if commerce.Spec.CoreMicroServices.GatewayClient != nil {
-		// Reconcile GatwayClient object
-		result, err = r.reconcileDeployment(ctx, commerce, NewGatewayClient(), log)
-		if err != nil {
-			return result, err
-		}
-
-		// Reconcile GatwayService object
-		result, err = r.reconcileGatewayService(ctx, commerce, log)
-		if err != nil {
-			return result, err
-		}
-
-		// Reconcile GatwayIngress object
-		result, err = r.reconcileGatewayIngress(ctx, commerce, log)
-		if err != nil {
-			return result, err
 		}
 	}
 
@@ -234,24 +350,25 @@ func (r *CommerceReconciler) findComponentsByLabel(namespace string, matchingLab
 }
 
 func (r *CommerceReconciler) getRunningEtcdPods(cr *cachev1alpha1.Commerce) int32 {
-	var running int32 = 0
+	return 3
+	// var running int32 = 0
 
-	podList, err := r.findComponentsByLabel(cr.Spec.TargetNamespace, client.MatchingLabels{
-		"app": "etcd",
-	})
+	// podList, err := r.findComponentsByLabel(constant.TargetNamespace, client.MatchingLabels{
+	// 	"app": "etcd",
+	// })
 
-	if err != nil {
-		r.Log.Error(err, "podlist")
-	}
+	// if err != nil {
+	// 	r.Log.Error(err, "podlist")
+	// }
 
-	for _, pod := range podList.Items {
-		if pod.Status.Phase == v1.PodRunning {
-			running++
-			// r.Log.Info("EtcdPod", "Pod is running", running, "pod.Status", pod.Status)
-		}
-	}
+	// for _, pod := range podList.Items {
+	// 	if pod.Status.Phase == v1.PodRunning {
+	// 		running++
+	// 		// r.Log.Info("EtcdPod", "Pod is running", running, "pod.Status", pod.Status)
+	// 	}
+	// }
 
-	return running
+	// return running
 }
 
 func ensureResourceDefaults(cr *cachev1alpha1.Commerce, microService *cachev1alpha1.MicroService) {

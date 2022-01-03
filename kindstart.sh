@@ -25,11 +25,14 @@ KIND_CLUSTER_NAME="v123"
 KIND_CLUSTER_NAME="${KIND_CLUSTER_NAME:-kind}"
 KIND_CLUSTER_OPTS="--name ${KIND_CLUSTER_NAME}"
 
+REGISTRY_STORAGE_PATH=$HOME/registry
+
 kind delete cluster $KIND_CLUSTER_OPTS || true
 
 if [ -n "${KIND_CLUSTER_IMAGE}" ]; then
   KIND_CLUSTER_OPTS="${KIND_CLUSTER_OPTS} --image ${KIND_CLUSTER_IMAGE}"
 fi
+
 
 kind_version=$(kind version)
 kind_network='kind'
@@ -41,13 +44,18 @@ case "${kind_version}" in
   ;;
 esac
 
-docker network disconnect "${kind_network}" "localrivet-db" || true
+docker network disconnect "${kind_network}" "k8scommerce-db" || true
 
 # create registry container unless it already exists
 running="$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)"
 if [ "${running}" != 'true' ]; then
   docker run \
-    -d --restart=always -p "${reg_port}:5000" --name "${reg_name}" \
+    -d \
+    --restart=always \
+    -p "${reg_port}:5000" \
+    --name "${reg_name}" \
+    --volume ${REGISTRY_STORAGE_PATH}:/var/lib/registry \
+    --env REGISTRY_STORAGE_DELETE_ENABLED=true \
     registry:2
 fi
 
@@ -108,7 +116,7 @@ if [ "${kind_network}" != "bridge" ]; then
 fi
 
 echo "> Connecting db to kind network..."
-docker network connect "${kind_network}" "localrivet-db"
+docker network connect "${kind_network}" "k8scommerce-db"
 
 echo "> Applying CRD..."
 kubectl apply -k config/crd

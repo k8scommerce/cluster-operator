@@ -7,37 +7,64 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
+  - '*'
+  resources:
+  - configmaps
+  - secrets
+  verbs:
+  - '*'
+- apiGroups:
+  - '*'
+  resources:
+  - deployments
+  verbs:
+  - '*'
+- apiGroups:
+  - '*'
+  resources:
+  - endpoints
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - '*'
+  resources:
+  - events
+  verbs:
+  - '*'
+- apiGroups:
+  - '*'
+  resources:
+  - namespaces
+  verbs:
+  - '*'
+- apiGroups:
+  - '*'
+  resources:
+  - pods
+  verbs:
+  - '*'
+- apiGroups:
   - apps
   resources:
   - deployments
   verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
+  - '*'
 - apiGroups:
-  - cache.commerce.k8sly.com
+  - cache.commerce.k8scommerce.com
   resources:
   - commerces
   verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
+  - '*'
 - apiGroups:
-  - cache.commerce.k8sly.com
+  - cache.commerce.k8scommerce.com
   resources:
   - commerces/finalizers
   verbs:
   - update
 - apiGroups:
-  - cache.commerce.k8sly.com
+  - cache.commerce.k8scommerce.com
   resources:
   - commerces/status
   verbs:
@@ -51,3 +78,16 @@ rules:
   verbs:
   - get
   - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - '*'
+- apiGroups:
+  - networking.k8s.io
+  resources:
+  - ingresses
+  verbs:
+  - '*'

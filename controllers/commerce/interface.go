@@ -1,7 +1,7 @@
 package commerce
 
 import (
-	cachev1alpha1 "github.com/localrivet/k8sly-operator/api/v1alpha1"
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 )
 

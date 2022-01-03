@@ -11,23 +11,24 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	cachev1alpha1 "github.com/localrivet/k8sly-operator/api/v1alpha1"
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
+	"github.com/k8scommerce/cluster-operator/controllers/constant"
 )
 
-// GatewayIngress interface used to create the kubernetes ingress.
-type GatewayIngress interface {
+// GatewayClientIngress interface used to create the kubernetes ingress.
+type GatewayClientIngress interface {
 	Create(cr *cachev1alpha1.Commerce) *networking.Ingress
 }
 
 // NewIngress instantiates an real implementation of the interface.
-func NewGatewayIngress() GatewayIngress {
-	return &gatewayIngress{}
+func NewGatewayClientIngress() GatewayClientIngress {
+	return &gatewayClientIngress{}
 }
 
-type gatewayIngress struct{}
+type gatewayClientIngress struct{}
 
 // Create returns a new route.
-func (r *gatewayIngress) Create(cr *cachev1alpha1.Commerce) *networking.Ingress {
+func (r *gatewayClientIngress) Create(cr *cachev1alpha1.Commerce) *networking.Ingress {
 	if cr.Spec.CoreMicroServices.GatewayClient == nil {
 		return &networking.Ingress{}
 	}
@@ -42,7 +43,7 @@ func (r *gatewayIngress) Create(cr *cachev1alpha1.Commerce) *networking.Ingress 
 		"nginx.org/client-max-body-size":                       "5m",
 		"nginx.ingress.kubernetes.io/enable-cors":              "true",
 		"nginx.ingress.kubernetes.io/cors-allow-origin":        corsOrigins,
-		"external-dns.alpha.kubernetes.io/target":              "cr.Spec.Hosts.Client.Hostname",
+		"external-dns.alpha.kubernetes.io/target":              cr.Spec.Hosts.Client.Hostname,
 	}
 
 	hosts := []string{}
@@ -77,8 +78,8 @@ func (r *gatewayIngress) Create(cr *cachev1alpha1.Commerce) *networking.Ingress 
 
 	ing := &networking.Ingress{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "ingress",
-			Namespace: cr.Spec.TargetNamespace,
+			Name:      "gateway-client-ingress",
+			Namespace: constant.TargetNamespace,
 		},
 		Spec: networking.IngressSpec{
 			DefaultBackend: &networking.IngressBackend{
@@ -108,8 +109,8 @@ func (r *gatewayIngress) Create(cr *cachev1alpha1.Commerce) *networking.Ingress 
 
 }
 
-func (r *CommerceReconciler) reconcileGatewayIngress(ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) (ctrl.Result, error) {
-	i := NewGatewayIngress()
+func (r *CommerceReconciler) reconcileGatewayClientIngress(ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) (ctrl.Result, error) {
+	i := NewGatewayClientIngress()
 	found := &networking.Ingress{}
 	wanted := i.Create(cr)
 	err := r.Get(ctx, types.NamespacedName{Name: wanted.Name, Namespace: wanted.Namespace}, found)

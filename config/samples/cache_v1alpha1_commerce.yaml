@@ -1,41 +1,62 @@
-apiVersion: cache.commerce.k8sly.com/v1alpha1
+apiVersion: cache.commerce.k8scommerce.com/v1alpha1
 kind: Commerce
 metadata:
   name: commerce
-  namespace: k8sly-system
+  namespace: k8scommerce-system
 spec:
-  targetNamespace: k8sly-commerce
   corsOrigins:
-    - http://local.k8sly.com:4200
+    - http://local.k8scommerce.com:4200
     - http://localhost:4200
 
   hosts:
     client:
-      hostname: api.local.k8sly.com
+      hostname: api.local.k8scommerce.com
       scheme: "http"
     admin:
-      hostname: admin.local.k8sly.com
+      hostname: admin.local.k8scommerce.com
       scheme: "http"
 
   database:
-    secretName: k8sly-db-secret
+    secretName: k8scommerce-db-secret
 
   coreMicroServices:
     gatewayClient:
       name: gatewayclient
       image: localhost:5000/client:latest
+      port: 8888
+      livenessProbe:
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        port: 8888
+      readinessProbe:
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        port: 8888
 
-    user:
-      name: user
-      image: localhost:5000/user:latest
-
-    product:
-      name: product
-      image: localhost:5000/product:latest
+    gatewayAdmin:
+      name: gatewayadmin
+      image: localhost:5000/admin:latest
+      port: 8888
+      livenessProbe:
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        port: 8888
+      readinessProbe:
+        initialDelaySeconds: 5
+        periodSeconds: 10
+        port: 8888
 
     cart:
       name: cart
       image: localhost:5000/cart:latest
+
+    customer:
+      name: customer
+      image: localhost:5000/customer:latest
+
+    email:
+      name: email
+      image: localhost:5000/email:latest
 
     inventory:
       name: inventory
@@ -45,9 +66,33 @@ spec:
       name: othersbought
       image: localhost:5000/othersbought:latest
 
+    payment:
+      name: payment
+      image: localhost:5000/payment:latest
+
+    product:
+      name: product
+      image: localhost:5000/product:latest
+
+    shipping:
+      name: shipping
+      image: localhost:5000/shipping:latest
+
     similarProducts:
       name: similarproducts
       image: localhost:5000/similarproducts:latest
 
+    store:
+      name: store
+      image: localhost:5000/store:latest
+
+    user:
+      name: user
+      image: localhost:5000/user:latest
+
+    warehouse:
+      name: warehouse
+      image: localhost:5000/warehouse:latest
+
   etcd:
-    replicas: 0
+    replicas: 3

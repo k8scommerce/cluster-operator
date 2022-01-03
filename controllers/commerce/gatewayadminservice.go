@@ -11,59 +11,60 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	cachev1alpha1 "github.com/localrivet/k8sly-operator/api/v1alpha1"
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
+	"github.com/k8scommerce/cluster-operator/controllers/constant"
 )
 
-//go:generate mockgen -destination ../internal/controllers/commerce/mocks/gateway_service.go -package=Mocks github.com/localrivet/k8sly/controllers/commerce Service
-// GatewayService interface.
-type GatewayService interface {
+//go:generate mockgen -destination ../internal/controllers/commerce/mocks/gatewayadminservice.go -package=Mocks github.com/k8scommerce/k8scommerce/controllers/commerce Service
+// GatewayAdminService interface.
+type GatewayAdminService interface {
 	Create(cr *cachev1alpha1.Commerce) *corev1.Service
 }
 
-// NewGatewayService creates a real implementation of the Service interface.
-func NewGatewayService() GatewayService {
-	return &gatewayService{}
+// NewGatewayAdminService creates a real implementation of the Service interface.
+func NewGatewayAdminService() GatewayAdminService {
+	return &gatewayAdminService{}
 }
 
-type gatewayService struct{}
+type gatewayAdminService struct{}
 
 // Create returns a new service.
-func (s *gatewayService) Create(cr *cachev1alpha1.Commerce) *corev1.Service {
-	if cr.Spec.CoreMicroServices.GatewayClient == nil {
+func (s *gatewayAdminService) Create(cr *cachev1alpha1.Commerce) *corev1.Service {
+	if cr.Spec.CoreMicroServices.GatewayAdmin == nil {
 		return &corev1.Service{}
 	}
 
 	var port int32 = 80
-	if cr.Spec.Hosts.Client.Scheme == "https" {
+	if cr.Spec.Hosts.Admin.Scheme == "https" {
 		port = 443
 	}
 
 	return &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "gateway-client-service",
-			Namespace: cr.Spec.TargetNamespace,
+			Name:      "gateway-admin-service",
+			Namespace: constant.TargetNamespace,
 			// Labels:    labels,
 		},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				"app": cr.Spec.CoreMicroServices.GatewayClient.Name,
+				"app": cr.Spec.CoreMicroServices.GatewayAdmin.Name,
 			},
 			Ports: []corev1.ServicePort{
 				{
-					Name:       cr.Spec.Hosts.Client.Scheme,
+					Name:       cr.Spec.Hosts.Admin.Scheme,
 					Protocol:   corev1.ProtocolTCP,
 					Port:       port,
-					TargetPort: intstr.FromInt(int(cr.Spec.CoreMicroServices.GatewayClient.ContainerPort)),
+					TargetPort: intstr.FromInt(int(cr.Spec.CoreMicroServices.GatewayAdmin.ContainerPort)),
 				},
 			},
 		},
 	}
 }
 
-func (r *CommerceReconciler) reconcileGatewayService(ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) (ctrl.Result, error) {
+func (r *CommerceReconciler) reconcileGatewayAdminService(ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) (ctrl.Result, error) {
 	// Define a new Service object
-	s := NewGatewayService()
+	s := NewGatewayAdminService()
 	found := &corev1.Service{}
 	wanted := s.Create(cr)
 
