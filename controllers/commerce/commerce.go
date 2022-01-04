@@ -36,8 +36,8 @@ import (
 	"github.com/k8scommerce/cluster-operator/controllers/constant"
 )
 
-// CommerceReconciler reconciles a Commerce object
-type CommerceReconciler struct {
+// K8sCommerceReconciler reconciles a K8sCommerce object
+type K8sCommerceReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	Log    logr.Logger
@@ -52,29 +52,26 @@ var commerceFinalizer = "cache.commerce.k8scommerce.com/finalizer"
 //+kubebuilder:rbac:groups=core,resources=services,verbs=*
 //+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch
 //+kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=*
-//+kubebuilder:rbac:groups=*,resources=namespaces,verbs=*
-//+kubebuilder:rbac:groups=*,resources=pods,verbs=*
-//+kubebuilder:rbac:groups=*,resources=deployments,verbs=*
-//+kubebuilder:rbac:groups=*,resources=configmaps;secrets,verbs=*
-//+kubebuilder:rbac:groups=*,resources=events,verbs=*
-//+kubebuilder:rbac:groups=*,resources=endpoints,verbs=get;watch;list
+//+kubebuilder:rbac:groups=etcd.database.coreos.com,resources=etcdclusters;etcdbackups;etcdrestores,verbs=*
+//+kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=*
+//+kubebuilder:rbac:groups=*,resources=services;persistentvolumeclaims;namespaces;pods;deployments;configmaps;secrets;events;endpoints,verbs=*
 
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.10.0/pkg/reconcile
-func (r *CommerceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *K8sCommerceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("commerce", req.NamespacedName)
 
 	var result reconcile.Result
 
 	// check the namespace exists first
-	commerce := &cachev1alpha1.Commerce{}
+	commerce := &cachev1alpha1.K8sCommerce{}
 	err := r.Get(ctx, req.NamespacedName, commerce)
 	if err != nil {
 
 		// log.Info("ERROR", err.Error(), req.NamespacedName)
 
 		if errors.IsNotFound(err) {
-			log.Info("Commerce resource not found. Ignoring since object must be deleted")
+			log.Info("K8sCommerce resource not found. Ignoring since object must be deleted")
 			return ctrl.Result{}, nil
 		}
 	}
@@ -119,7 +116,7 @@ func (r *CommerceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 				return result, err
 			}
 
-			// Reconcile Etc
+			// // Reconcile Etc
 			// result, err = r.reconcileEtcd(ctx, commerce, log)
 			// if err != nil {
 			// 	return result, err
@@ -287,9 +284,9 @@ func (r *CommerceReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *CommerceReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *K8sCommerceReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&cachev1alpha1.Commerce{}).
+		For(&cachev1alpha1.K8sCommerce{}).
 		Complete(r)
 }
 
@@ -336,7 +333,7 @@ func CleanContainerImage(image string) string {
 	return cleanedImage
 }
 
-func (r *CommerceReconciler) findComponentsByLabel(namespace string, matchingLabels client.MatchingLabels) (*v1.PodList, error) {
+func (r *K8sCommerceReconciler) findComponentsByLabel(namespace string, matchingLabels client.MatchingLabels) (*v1.PodList, error) {
 	podList := &v1.PodList{}
 
 	opts := []client.ListOption{
@@ -349,7 +346,7 @@ func (r *CommerceReconciler) findComponentsByLabel(namespace string, matchingLab
 	return podList, err
 }
 
-func (r *CommerceReconciler) getRunningEtcdPods(cr *cachev1alpha1.Commerce) int32 {
+func (r *K8sCommerceReconciler) getRunningEtcdPods(cr *cachev1alpha1.K8sCommerce) int32 {
 	return 3
 	// var running int32 = 0
 
@@ -371,7 +368,7 @@ func (r *CommerceReconciler) getRunningEtcdPods(cr *cachev1alpha1.Commerce) int3
 	// return running
 }
 
-func ensureResourceDefaults(cr *cachev1alpha1.Commerce, microService *cachev1alpha1.MicroService) {
+func ensureResourceDefaults(cr *cachev1alpha1.K8sCommerce, microService *cachev1alpha1.MicroService) {
 	if cr.Spec.CoreMicroServices.GatewayClient != nil {
 		// limits
 		if microService.Resources.Limits.CPU == "" {

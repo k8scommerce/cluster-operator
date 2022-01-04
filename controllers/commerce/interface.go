@@ -9,7 +9,7 @@ import (
 // reconcilers
 //
 type ReconcilableDeployment interface {
-	Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment
+	Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment
 }
 
 //
@@ -17,9 +17,9 @@ type ReconcilableDeployment interface {
 //
 
 type FinalizableDeployment interface {
-	Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment
+	Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment
 }
 
 type FinalizableService interface {
-	Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment
+	Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment
 }

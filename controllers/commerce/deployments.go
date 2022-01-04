@@ -19,14 +19,14 @@ func NewMicroserviceDeployment(ms *cachev1alpha1.MicroService) MicroserviceDeplo
 }
 
 type MicroserviceDeployment interface {
-	Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment
+	Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment
 }
 
 type microServiceDeployment struct {
 	ms *cachev1alpha1.MicroService
 }
 
-func (d *microServiceDeployment) Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment {
+func (d *microServiceDeployment) Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment {
 	microService := d.ms
 
 	if microService == nil {
@@ -35,7 +35,7 @@ func (d *microServiceDeployment) Create(cr *cachev1alpha1.Commerce) *appsv1.Depl
 
 	annotations := map[string]string{
 		"operator-sdk/primary-resource":      fmt.Sprintf("%s/%s", cr.ObjectMeta.Namespace, cr.ObjectMeta.Name),
-		"operator-sdk/primary-resource-type": "Commerce.apps",
+		"operator-sdk/primary-resource-type": "K8sCommerce.apps",
 	}
 
 	// set the default port

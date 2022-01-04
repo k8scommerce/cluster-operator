@@ -9,7 +9,7 @@ import (
 //go:generate mockgen -destination ../internal/controllers/commerce/mocks/othersBought.go -package=Mocks github.com/k8scommerce/k8scommerce/controllers/commerce mode Deployment
 // OthersBought interface.
 type OthersBought interface {
-	Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment
+	Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment
 }
 
 // NewOthersBought creates a new othersBought.
@@ -20,7 +20,7 @@ func NewOthersBought() OthersBought {
 type othersBought struct{}
 
 // Create Returns a new othersBought without replicas configured - replicas will be configured in the sync loop.
-func (d *othersBought) Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment {
+func (d *othersBought) Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment {
 	dep := NewMicroserviceDeployment(cr.Spec.CoreMicroServices.OthersBought)
 	return dep.Create(cr)
 }

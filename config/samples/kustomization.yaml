@@ -1,7 +1,9 @@
 ## Append samples you want in your CSV to this file as resources ##
+bases:
+  - etcd
 resources:
 - namespace.yaml
 # - etcd.yaml
 # - db-secret.yaml
-- cache_v1alpha1_commerce.yaml
+# - cache_v1alpha1_commerce.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

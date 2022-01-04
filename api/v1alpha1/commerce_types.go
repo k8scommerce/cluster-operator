@@ -132,18 +132,18 @@ type Etcd struct {
 	Replicas *int32 `json:"replicas,omitempty"`
 }
 
-// CommerceSpec defines the desired state of Commerce
-type CommerceSpec struct {
+// K8sCommerceSpec defines the desired state of K8sCommerce
+type K8sCommerceSpec struct {
 	CorsOrigins       []string          `json:"corsOrigins"`
 	Hosts             Hosts             `json:"hosts"`
 	CoreMicroServices CoreMicroServices `json:"coreMicroServices"`
 	AddOnServices     []MicroService    `json:"addOnMicroServices,omitempty"`
 	Database          *Database         `json:"database,omitempty"`
-	Etcd              Etcd              `json:"etcd"`
+	// Etcd              Etcd              `json:"etcd"`
 }
 
-// CommerceStatus defines the observed state of Commerce
-type CommerceStatus struct {
+// K8sCommerceStatus defines the observed state of K8sCommerce
+type K8sCommerceStatus struct {
 	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
@@ -152,44 +152,44 @@ type CommerceStatus struct {
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
 
-// Commerce is the Schema for the commerces API
-type Commerce struct {
+// K8sCommerce is the Schema for the commerces API
+type K8sCommerce struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   CommerceSpec   `json:"spec,omitempty"`
-	Status CommerceStatus `json:"status,omitempty"`
+	Spec   K8sCommerceSpec   `json:"spec,omitempty"`
+	Status K8sCommerceStatus `json:"status,omitempty"`
 }
 
 //+kubebuilder:object:root=true
 
-// CommerceList contains a list of Commerce
-type CommerceList struct {
+// K8sCommerceList contains a list of K8sCommerce
+type K8sCommerceList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Commerce `json:"items"`
+	Items           []K8sCommerce `json:"items"`
 }
 
 // IsBeingDeleted returns true if a deletion timestamp is set.
-func (in *Commerce) IsBeingDeleted() bool {
+func (in *K8sCommerce) IsBeingDeleted() bool {
 	return !in.ObjectMeta.GetDeletionTimestamp().IsZero()
 }
 
 // HasFinalizer returns true if a deletion timestamp is set.
-func (in *Commerce) HasFinalizer(finalizerName string) bool {
+func (in *K8sCommerce) HasFinalizer(finalizerName string) bool {
 	return containsString(in.ObjectMeta.Finalizers, finalizerName)
 }
 
 // AddFinalizer adds the specified finalizer.
-func (in *Commerce) AddFinalizer(finalizerName string) {
+func (in *K8sCommerce) AddFinalizer(finalizerName string) {
 	in.ObjectMeta.Finalizers = append(in.ObjectMeta.Finalizers, finalizerName)
 }
 
 // RemoveFinalizer removes the specified finalizer.
-func (in *Commerce) RemoveFinalizer(finalizerName string) {
+func (in *K8sCommerce) RemoveFinalizer(finalizerName string) {
 	in.ObjectMeta.Finalizers = removeString(in.ObjectMeta.Finalizers, finalizerName)
 }
 
 func init() {
-	SchemeBuilder.Register(&Commerce{}, &CommerceList{})
+	SchemeBuilder.Register(&K8sCommerce{}, &K8sCommerceList{})
 }

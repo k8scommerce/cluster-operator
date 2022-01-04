@@ -1,0 +1,116 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: etcdclusters.etcd.database.coreos.com
+spec:
+  group: etcd.database.coreos.com
+  names:
+    kind: EtcdCluster
+    listKind: EtcdClusterList
+    plural: etcdclusters
+    shortNames:
+      - etcdclus
+      - etcd
+    singular: etcdcluster
+  scope: Namespaced
+  version: v1beta2
+  versions:
+    - name: v1beta2
+      served: true
+      storage: true
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: etcd-operator-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: etcd-operator-role
+  namespace: k8scommerce-system
+rules:
+  - apiGroups:
+      - etcd.database.coreos.com
+    resources:
+      - etcdclusters
+      - etcdbackups
+      - etcdrestores
+    verbs:
+      - "*"
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - services
+      - endpoints
+      - persistentvolumeclaims
+      - events
+    verbs:
+      - "*"
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - "*"
+  # The following permissions can be removed if not using S3 backup and TLS
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: etcd-operator-rolebinding
+  namespace: k8scommerce-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: etcd-operator-role
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: k8scommerce-system
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etcd-operator
+  namespace: k8scommerce-system
+  labels:
+    name: etcd-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: etcd-operator
+  template:
+    metadata:
+      labels:
+        name: etcd-operator
+    spec:
+      containers:
+        - name: etcd-operator
+          image: quay.io/coreos/etcd-operator:v0.9.4
+          command:
+            - etcd-operator
+          # Uncomment to act for resources in all namespaces. More information in doc/user/clusterwide.md
+          #- -cluster-wide
+          env:
+            - name: MY_POD_NAMESPACE
+              value: k8scommerce
+            - name: MY_POD_NAME
+              value: etcd
+---
+apiVersion: etcd.database.coreos.com/v1beta2
+kind: EtcdCluster
+metadata:
+  namespace: k8scommerce
+  name: etcd
+spec:
+  size: 3
+  version: 3.2.13
