@@ -16,7 +16,7 @@ import (
 )
 
 // Create namespaceCreate. If return true, requeue.
-func (r *CommerceReconciler) reconcileNamespace(ctx context.Context, commerce *cachev1alpha1.Commerce, log logr.Logger) (ctrl.Result, error) {
+func (r *K8sCommerceReconciler) reconcileNamespace(ctx context.Context, commerce *cachev1alpha1.K8sCommerce, log logr.Logger) (ctrl.Result, error) {
 
 	r.Log.Info(fmt.Sprintf("Starting namespaceCreate %s", commerce.GetName()))
 
@@ -40,7 +40,7 @@ func (r *CommerceReconciler) reconcileNamespace(ctx context.Context, commerce *c
 		if err = r.Status().Patch(ctx, commerce, patch); err != nil {
 			// r.Recorder.Event(commerce, corev1.EventTypeWarning, "Failed Status Update", fmt.Sprintf("Error: %s: Existing: %s, Requested:%s", err.Error(), commerce.Status.Name, commerce.ObjectMeta.Name))
 
-			r.Log.Error(err, "Failed to update Commerce status during namespaceCreate create")
+			r.Log.Error(err, "Failed to update K8sCommerce status during namespaceCreate create")
 			return ctrl.Result{}, err
 		}
 		// r.Recorder.Event(commerce, corev1.EventTypeNormal, "Status Updated", fmt.Sprintf("Existing: %s, Requested:%s", commerce.Status.Name, commerce.ObjectMeta.Name))
@@ -52,7 +52,7 @@ func (r *CommerceReconciler) reconcileNamespace(ctx context.Context, commerce *c
 }
 
 // Create namespaceFinalDelete. If return true, requeue.
-func (r *CommerceReconciler) namespaceFinalDelete(ctx context.Context, commerce *cachev1alpha1.Commerce) error {
+func (r *K8sCommerceReconciler) namespaceFinalDelete(ctx context.Context, commerce *cachev1alpha1.K8sCommerce) error {
 
 	// if commerce.ObjectMeta.Namespace != "" {
 	if constant.TargetNamespace != "" {

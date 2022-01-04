@@ -9,7 +9,7 @@ import (
 //go:generate mockgen -destination ../internal/controllers/commerce/mocks/similarProducts.go -package=Mocks github.com/k8scommerce/k8scommerce/controllers/commerce mode Deployment
 // SimilarProducts interface.
 type SimilarProducts interface {
-	Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment
+	Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment
 }
 
 // NewSimilarProducts creates a new similarProducts.
@@ -20,7 +20,7 @@ func NewSimilarProducts() SimilarProducts {
 type similarProducts struct{}
 
 // Create Returns a new similarProducts without replicas configured - replicas will be configured in the sync loop.
-func (d *similarProducts) Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment {
+func (d *similarProducts) Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment {
 	dep := NewMicroserviceDeployment(cr.Spec.CoreMicroServices.SimilarProducts)
 	return dep.Create(cr)
 }

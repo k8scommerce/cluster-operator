@@ -4,19 +4,20 @@ import (
 	"context"
 	"fmt"
 
+	etcdv1beta2 "github.com/coreos/etcd-operator/pkg/apis/etcd/v1beta2"
 	"github.com/go-logr/logr"
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
+	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
 )
 
 // addFinalizer adds a given finalizer to a given CR.
-func (r *CommerceReconciler) addFinalizer(ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) error {
+func (r *K8sCommerceReconciler) addFinalizer(ctx context.Context, cr *cachev1alpha1.K8sCommerce, log logr.Logger) error {
 	controllerutil.AddFinalizer(cr, commerceFinalizer)
 
 	// Update CR
@@ -28,119 +29,150 @@ func (r *CommerceReconciler) addFinalizer(ctx context.Context, cr *cachev1alpha1
 }
 
 // handleFinalizer runs required tasks before deleting the objects owned by the CR.
-func (r *CommerceReconciler) handleFinalizer(ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) (err error) {
+func (r *K8sCommerceReconciler) handleFinalizer(ctx context.Context, cr *cachev1alpha1.K8sCommerce, log logr.Logger) (err error) {
 	if !cr.HasFinalizer(commerceFinalizer) {
 		return nil
-	}
-
-	// delete etcd
-	{
-		var i int32
-		for i = 0; i < *cr.Spec.Etcd.Replicas; i++ {
-			if err = r.deleteEtcdPod(ctx, cr, i); err != nil {
-				return err
-			}
-			if err = r.deleteService(ctx, cr, NewEtcd().CreatePodService(cr, i)); err != nil {
-				return err
-			}
-		}
-		if err = r.deleteService(ctx, cr, NewEtcd().CreateClientService(cr)); err != nil {
-			return err
-		}
 	}
 
 	// delete the microservices
 	{
 		// delete the gateway cliet service
-		if err = r.deleteDeployment(ctx, cr, NewGatewayClient()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.GatewayClient != nil {
+			if err = r.deleteDeployment(ctx, cr, NewGatewayClient()); err != nil {
+				return err
+			}
 		}
 
 		// delete the gateway admin service
-		if err = r.deleteDeployment(ctx, cr, NewGatewayAdmin()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.GatewayAdmin != nil {
+			if err = r.deleteDeployment(ctx, cr, NewGatewayAdmin()); err != nil {
+				return err
+			}
 		}
 
 		// delete the cart service
-		if err = r.deleteDeployment(ctx, cr, NewCart()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.Cart != nil {
+			if err = r.deleteDeployment(ctx, cr, NewCart()); err != nil {
+				return err
+			}
 		}
 
 		// delete the customer service
-		if err = r.deleteDeployment(ctx, cr, NewCustomer()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.Customer != nil {
+			if err = r.deleteDeployment(ctx, cr, NewCustomer()); err != nil {
+				return err
+			}
 		}
 
 		// delete the email service
-		if err = r.deleteDeployment(ctx, cr, NewEmail()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.Email != nil {
+			if err = r.deleteDeployment(ctx, cr, NewEmail()); err != nil {
+				return err
+			}
 		}
 
 		// delete the inventory service
-		if err = r.deleteDeployment(ctx, cr, NewInventory()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.Inventory != nil {
+			if err = r.deleteDeployment(ctx, cr, NewInventory()); err != nil {
+				return err
+			}
 		}
 
 		// delete the othersBought service
-		if err = r.deleteDeployment(ctx, cr, NewOthersBought()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.OthersBought != nil {
+			if err = r.deleteDeployment(ctx, cr, NewOthersBought()); err != nil {
+				return err
+			}
 		}
 
 		// delete the payment service
-		if err = r.deleteDeployment(ctx, cr, NewPayment()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.Payment != nil {
+			if err = r.deleteDeployment(ctx, cr, NewPayment()); err != nil {
+				return err
+			}
 		}
 
 		// delete the product service
-		if err = r.deleteDeployment(ctx, cr, NewProduct()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.Product != nil {
+			if err = r.deleteDeployment(ctx, cr, NewProduct()); err != nil {
+				return err
+			}
 		}
 
 		// delete the shipping service
-		if err = r.deleteDeployment(ctx, cr, NewShipping()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.Shipping != nil {
+			if err = r.deleteDeployment(ctx, cr, NewShipping()); err != nil {
+				return err
+			}
 		}
 
 		// delete the similarProducts service
-		if err = r.deleteDeployment(ctx, cr, NewSimilarProducts()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.SimilarProducts != nil {
+			if err = r.deleteDeployment(ctx, cr, NewSimilarProducts()); err != nil {
+				return err
+			}
 		}
 
 		// delete the store service
-		if err = r.deleteDeployment(ctx, cr, NewStore()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.Store != nil {
+			if err = r.deleteDeployment(ctx, cr, NewStore()); err != nil {
+				return err
+			}
 		}
 
 		// delete the user service
-		if err = r.deleteDeployment(ctx, cr, NewUser()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.User != nil {
+			if err = r.deleteDeployment(ctx, cr, NewUser()); err != nil {
+				return err
+			}
 		}
 
 		// delete the warehouse service
-		if err = r.deleteDeployment(ctx, cr, NewWarehouse()); err != nil {
-			return err
+		if cr.Spec.CoreMicroServices.Warehouse != nil {
+			if err = r.deleteDeployment(ctx, cr, NewWarehouse()); err != nil {
+				return err
+			}
 		}
 	}
 
 	// delete the gateway client service
-	if err = r.deleteService(ctx, cr, NewGatewayClientService().Create(cr)); err != nil {
-		return err
-	}
+	if cr.Spec.CoreMicroServices.GatewayClient != nil {
+		if err = r.deleteService(ctx, cr, NewGatewayClientService().Create(cr)); err != nil {
+			return err
+		}
 
-	// delete the gateway client ingress
-	if err = r.deleteIngress(ctx, cr, NewGatewayClientIngress().Create(cr)); err != nil {
-		return err
+		// delete the gateway client ingress
+		if err = r.deleteIngress(ctx, cr, NewGatewayClientIngress().Create(cr)); err != nil {
+			return err
+		}
 	}
 
 	// delete the gateway admin service
-	if err = r.deleteService(ctx, cr, NewGatewayAdminService().Create(cr)); err != nil {
-		return err
+	if cr.Spec.CoreMicroServices.GatewayAdmin != nil {
+		if err = r.deleteService(ctx, cr, NewGatewayAdminService().Create(cr)); err != nil {
+			return err
+		}
+
+		// delete the gateway admin ingress
+		if err = r.deleteIngress(ctx, cr, NewGatewayAdminIngress().Create(cr)); err != nil {
+			return err
+		}
 	}
 
-	// delete the gateway admin ingress
-	if err = r.deleteIngress(ctx, cr, NewGatewayAdminIngress().Create(cr)); err != nil {
-		return err
-	}
+	// delete etcd
+	// {
+	// 	if err = r.deleteEtcdCluter(ctx, NewEtcd().CreateCluster()); err != nil {
+	// 		return err
+	// 	}
+
+	// 	if err = r.deleteEtcdOperator(ctx, NewEtcd().CreateOperator()); err != nil {
+	// 		return err
+	// 	}
+
+	// 	if err = r.deleteEtcdCRD(ctx, NewEtcd().CreateCRD()); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	// delete the target namespace
 	if err = r.namespaceFinalDelete(ctx, cr); err != nil {
@@ -157,7 +189,7 @@ func (r *CommerceReconciler) handleFinalizer(ctx context.Context, cr *cachev1alp
 	return r.Update(ctx, cr)
 }
 
-func (r *CommerceReconciler) deleteDeployment(ctx context.Context, cr *cachev1alpha1.Commerce, s FinalizableDeployment) error {
+func (r *K8sCommerceReconciler) deleteDeployment(ctx context.Context, cr *cachev1alpha1.K8sCommerce, s FinalizableDeployment) error {
 	dep := s.Create(cr)
 	depFound := &appsv1.Deployment{}
 	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
@@ -177,10 +209,10 @@ func (r *CommerceReconciler) deleteDeployment(ctx context.Context, cr *cachev1al
 	return nil
 }
 
-func (r *CommerceReconciler) deleteEtcdPod(ctx context.Context, cr *cachev1alpha1.Commerce, id int32) error {
-	s := NewEtcd()
-	dep := s.CreatePod(cr, id)
-	depFound := &corev1.Pod{}
+func (r *K8sCommerceReconciler) deleteEtcdOperator(ctx context.Context, dep *appsv1.Deployment) error {
+	// s := NewEtcd()
+	// dep := s.CreateOperator()
+	depFound := &appsv1.Deployment{}
 	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
 	if err != nil && errors.IsNotFound(err) {
 		return nil
@@ -190,15 +222,55 @@ func (r *CommerceReconciler) deleteEtcdPod(ctx context.Context, cr *cachev1alpha
 	}
 	err = r.Delete(ctx, dep)
 	if err != nil {
-		r.Log.Error(err, "Failed to delete Pod")
+		r.Log.Error(err, "Failed to delete Deployment")
 		return err
 	}
-	r.Log.Info(fmt.Sprintf("Pod deleted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
+	r.Log.Info(fmt.Sprintf("Deployment deleted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
 
 	return nil
 }
 
-func (r *CommerceReconciler) deleteIngress(ctx context.Context, cr *cachev1alpha1.Commerce, ing *networking.Ingress) error {
+func (r *K8sCommerceReconciler) deleteEtcdCluter(ctx context.Context, dep *etcdv1beta2.EtcdCluster) error {
+	// s := NewEtcd()
+	// dep := s.CreateCluster()
+	depFound := &etcdv1beta2.EtcdCluster{}
+	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
+	if err != nil && errors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	err = r.Delete(ctx, dep)
+	if err != nil {
+		r.Log.Error(err, "Failed to delete EtcdCluster")
+		return err
+	}
+	r.Log.Info(fmt.Sprintf("EtcdCluster deleted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
+
+	return nil
+}
+
+func (r *K8sCommerceReconciler) deleteEtcdCRD(ctx context.Context, dep *extapi.CustomResourceDefinition) error {
+	depFound := &extapi.CustomResourceDefinition{}
+	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
+	if err != nil && errors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	err = r.Delete(ctx, dep)
+	if err != nil {
+		r.Log.Error(err, "Failed to delete Deployment")
+		return err
+	}
+	r.Log.Info(fmt.Sprintf("Deployment deleted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
+
+	return nil
+}
+
+func (r *K8sCommerceReconciler) deleteIngress(ctx context.Context, cr *cachev1alpha1.K8sCommerce, ing *networking.Ingress) error {
 	ingress := &networking.Ingress{}
 	err := r.Get(ctx, types.NamespacedName{Name: ing.Name, Namespace: ing.Namespace}, ingress)
 	if err != nil && errors.IsNotFound(err) {
@@ -217,7 +289,7 @@ func (r *CommerceReconciler) deleteIngress(ctx context.Context, cr *cachev1alpha
 	return nil
 }
 
-func (r *CommerceReconciler) deleteService(ctx context.Context, cr *cachev1alpha1.Commerce, svc *corev1.Service) error {
+func (r *K8sCommerceReconciler) deleteService(ctx context.Context, cr *cachev1alpha1.K8sCommerce, svc *corev1.Service) error {
 	service := &corev1.Service{}
 	err := r.Get(ctx, types.NamespacedName{Name: svc.Name, Namespace: svc.Namespace}, service)
 	if err != nil && errors.IsNotFound(err) {

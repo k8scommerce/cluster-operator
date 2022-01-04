@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.7.0
   creationTimestamp: null
-  name: commerces.cache.commerce.k8scommerce.com
+  name: k8scommerces.cache.commerce.k8scommerce.com
 spec:
   group: cache.commerce.k8scommerce.com
   names:
-    kind: Commerce
-    listKind: CommerceList
-    plural: commerces
-    singular: commerce
+    kind: K8sCommerce
+    listKind: K8sCommerceList
+    plural: k8scommerces
+    singular: k8scommerce
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Commerce is the Schema for the commerces API
+        description: K8sCommerce is the Schema for the commerces API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,7 +34,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: CommerceSpec defines the desired state of Commerce
+            description: K8sCommerceSpec defines the desired state of K8sCommerce
             properties:
               addOnMicroServices:
                 items:
@@ -1325,12 +1325,6 @@ spec:
                   secretName:
                     type: string
                 type: object
-              etcd:
-                properties:
-                  replicas:
-                    format: int32
-                    type: integer
-                type: object
               hosts:
                 properties:
                   admin:
@@ -1360,11 +1354,10 @@ spec:
             required:
             - coreMicroServices
             - corsOrigins
-            - etcd
             - hosts
             type: object
           status:
-            description: CommerceStatus defines the observed state of Commerce
+            description: K8sCommerceStatus defines the observed state of K8sCommerce
             properties:
               observedGeneration:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state

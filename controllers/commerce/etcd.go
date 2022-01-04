@@ -18,33 +18,30 @@ package commerce
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
+	etcdv1beta2 "github.com/coreos/etcd-operator/pkg/apis/etcd/v1beta2"
 	"github.com/go-logr/logr"
 	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
 	"github.com/k8scommerce/cluster-operator/controllers/constant"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/intstr"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 const (
-	EtcdImage = "quay.io/coreos/etcd:latest"
+	EtcdImage = "quay.io/coreos/etcd-operator:v0.9.4"
 )
 
 //go:generate mockgen -destination ../internal/controllers/commerce/mocks/etcd.go -package=Mocks github.com/k8scommerce/k8scommerce/controllers/commerce mode Deployment
 // Etcd interface.
 type Etcd interface {
-	CreateClientService(cr *cachev1alpha1.Commerce) *corev1.Service
-	CreatePodService(cr *cachev1alpha1.Commerce, id int32) *corev1.Service
-	CreatePod(cr *cachev1alpha1.Commerce, id int32) *corev1.Pod
-	// HasVersionMismatch(current *appsv1.Deployment, desired *appsv1.Deployment) bool
-	// IsReady(etcd *appsv1.Deployment) bool
-	// isEnvHashCurrent(etcd *appsv1.Deployment, annotationKey string, hash string) bool
+	CreateCRD() *extapi.CustomResourceDefinition
+	CreateOperator() *appsv1.Deployment
+	CreateCluster() *etcdv1beta2.EtcdCluster
 }
 
 // NewEtcd creates a new etcd.
@@ -54,295 +51,250 @@ func NewEtcd() Etcd {
 
 type etcd struct{}
 
-// apiVersion: v1
-// kind: Service
+// apiVersion: extapi.k8s.io/v1beta1
+// kind: CustomResourceDefinition
 // metadata:
-//   name: etcd-client
-//   namespace: k8scom-system
+//  name: etcdclusters.etcd.database.coreos.com
 // spec:
-//   ports:
-//     - name: etcd-client-port
-//       port: 2379
-//       protocol: TCP
-//       targetPort: 2379
-//   selector:
-//     app: etcd
-func (d *etcd) CreateClientService(cr *cachev1alpha1.Commerce) *corev1.Service {
-	svc := &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
+//  group: etcd.database.coreos.com
+//  names:
+//  kind: EtcdCluster
+//  listKind: EtcdClusterList
+//  plural: etcdclusters
+//  shortNames:
+//  - etcdclus
+//  - etcd
+//  singular: etcdcluster
+//  scope: Namespaced
+//  version: v1beta2
+//  versions:
+//  - name: v1beta2
+//  served: true
+//  storage: true
+func (d *etcd) CreateCRD() *extapi.CustomResourceDefinition {
+	return &extapi.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "etcd-client",
-			Namespace: constant.TargetNamespace,
+			Name:      "etcdclusters.etcd.database.coreos.com",
+			Namespace: constant.ManagerNamespace,
 		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
+		Spec: extapi.CustomResourceDefinitionSpec{
+			Group: "etcd.database.coreos.com",
+			Names: extapi.CustomResourceDefinitionNames{
+				Kind:     "EtcdCluster",
+				ListKind: "EtcdClusterList",
+				Plural:   "etcdclusters",
+				ShortNames: []string{
+					"etcdclus",
+					"etcd",
+				},
+				Singular: "etcdcluster",
+			},
+			Scope: extapi.NamespaceScoped,
+			Versions: []extapi.CustomResourceDefinitionVersion{
 				{
-					Name:       "etcd-client-port",
-					Port:       2379,
-					Protocol:   corev1.ProtocolTCP,
-					TargetPort: intstr.FromInt(2379),
+					Name:    "v1",
+					Served:  true,
+					Storage: true,
 				},
 			},
-			Selector: map[string]string{
-				"app": "etcd",
-			},
 		},
 	}
-
-	return svc
 }
 
-// apiVersion: v1
-// kind: Service
+// apiVersion: extensions/v1beta1
+// kind: Deployment
 // metadata:
-//   labels:
-//     etcd_node: etcd0
-//   name: etcd0
-//   namespace: k8scom-system
+//   name: etcd-operator
 // spec:
-//   ports:
-//     - name: client
-//       port: 2379
-//       protocol: TCP
-//       targetPort: 2379
-//     - name: server
-//       port: 2380
-//       protocol: TCP
-//       targetPort: 2380
-//   selector:
-//     etcd_node: etcd0
-func (d *etcd) CreatePodService(cr *cachev1alpha1.Commerce, id int32) *corev1.Service {
-	svc := &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
+//   replicas: 1
+//   template:
+//     metadata:
+//       labels:
+//         name: etcd-operator
+//     spec:
+//       containers:
+//       - name: etcd-operator
+//         image: quay.io/coreos/etcd-operator:v0.9.4
+//         command:
+//         - etcd-operator
+//         # Uncomment to act for resources in all namespaces. More information in doc/user/clusterwide.md
+//         #- -cluster-wide
+//         env:
+//         - name: MY_POD_NAMESPACE
+//           valueFrom:
+//             fieldRef:
+//               fieldPath: metadata.namespace
+//         - name: MY_POD_NAME
+//           valueFrom:
+//             fieldRef:
+//               fieldPath: metadata.name
+func (d *etcd) CreateOperator() *appsv1.Deployment {
+	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Labels: map[string]string{
-				"etcd_node": fmt.Sprintf("etcd%d", id),
-			},
-			Name:      fmt.Sprintf("etcd%d", id),
-			Namespace: constant.TargetNamespace,
+			Name:      "etcd-operator",
+			Namespace: constant.ManagerNamespace,
 		},
-		Spec: corev1.ServiceSpec{
-			Ports: []corev1.ServicePort{
-				{
-					Name:       "client",
-					Port:       2379,
-					Protocol:   corev1.ProtocolTCP,
-					TargetPort: intstr.FromInt(2379),
-				}, {
-					Name:       "server",
-					Port:       2380,
-					Protocol:   corev1.ProtocolTCP,
-					TargetPort: intstr.FromInt(2380),
+		Spec: appsv1.DeploymentSpec{
+			Replicas: NewInt32(1),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"name": "etcd-operator",
 				},
 			},
-			Selector: map[string]string{
-				"etcd_node": fmt.Sprintf("etcd%d", id),
-			},
-		},
-	}
-
-	return svc
-}
-
-// apiVersion: v1
-// kind: Pod
-// metadata:
-//   labels:
-//     app: etcd
-//     etcd_node: etcd0
-//   name: etcd0
-//   namespace: k8scom-system
-// spec:
-//   containers:
-//     - command:
-//         - /usr/local/bin/etcd
-//         - --name
-//         - etcd0
-//         - --initial-advertise-peer-urls
-//         - http://etcd0:2380
-//         - --listen-peer-urls
-//         - http://0.0.0.0:2380
-//         - --listen-client-urls
-//         - http://0.0.0.0:2379
-//         - --advertise-client-urls
-//         - http://etcd0:2379
-//         - --initial-cluster
-//         - etcd0=http://etcd0:2380,etcd1=http://etcd1:2380,etcd2=http://etcd2:2380
-//         - --initial-cluster-state
-//         - new
-//       image: quay.io/coreos/etcd:latest
-//       name: etcd0
-//       ports:
-//         - containerPort: 2379
-//           name: client
-//           protocol: TCP
-//         - containerPort: 2380
-//           name: server
-//           protocol: TCP
-//   restartPolicy: Always
-func (d *etcd) CreatePod(cr *cachev1alpha1.Commerce, id int32) *corev1.Pod {
-	var etcdEndpoints []string
-	var x int32
-	for x = 0; x < *cr.Spec.Etcd.Replicas; x++ {
-		// "etcd0=http://etcd0:2380,etcd1=http://etcd1:2380,etcd2=http://etcd2:2380",
-		etcdEndpoints = append(etcdEndpoints, fmt.Sprintf("etcd%d=http://etcd%d:2380", x, x))
-	}
-
-	etcdEndpoint := strings.Join(etcdEndpoints, ",")
-
-	pod := &corev1.Pod{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Pod",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Labels: map[string]string{
-				"app":       "etcd",
-				"etcd_node": fmt.Sprintf("etcd%d", id),
-			},
-			Name:      fmt.Sprintf("etcd%d", id),
-			Namespace: constant.TargetNamespace,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Image: EtcdImage,
-					Name:  fmt.Sprintf("etcd%d", id),
-					Ports: []corev1.ContainerPort{
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"name": "etcd-operator",
+					},
+				},
+				Spec: corev1.PodSpec{
+					TerminationGracePeriodSeconds: NewInt64(5),
+					Containers: []corev1.Container{
 						{
-							Name:          "client",
-							ContainerPort: 2379,
-							Protocol:      corev1.ProtocolTCP,
-						}, {
-							Name:          "server",
-							ContainerPort: 2380,
-							Protocol:      corev1.ProtocolTCP,
+							Name:  "etcd-operator",
+							Image: EtcdImage,
+							Command: []string{
+								"etcd-operator",
+							},
+							Env: []corev1.EnvVar{
+								{
+									Name: "MY_POD_NAMESPACE",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.namespace",
+										},
+									},
+								},
+								{
+									Name: "MY_POD_NAME",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.name",
+										},
+									},
+								},
+							},
 						},
 					},
-					Command: []string{
-						"/usr/local/bin/etcd",
-						"--name",
-						fmt.Sprintf("etcd%d", id),
-						"--initial-advertise-peer-urls",
-						fmt.Sprintf("http://etcd%d:2380", id),
-						"--listen-peer-urls",
-						"http://0.0.0.0:2380",
-						"--listen-client-urls",
-						"http://0.0.0.0:2379",
-						"--advertise-client-urls",
-						fmt.Sprintf("http://etcd%d:2379", id),
-						"--initial-cluster",
-						etcdEndpoint,
-						"--initial-cluster-state",
-						"new",
-					},
 				},
 			},
-			RestartPolicy: corev1.RestartPolicyAlways,
 		},
 	}
+}
 
-	return pod
+// apiVersion: "etcd.database.coreos.com/v1beta2"
+// kind: "EtcdCluster"
+// metadata:
+//   name: "example-etcd-cluster"
+//   ## Adding this annotation make this cluster managed by clusterwide operators
+//   ## namespaced operators ignore it
+//   # annotations:
+//   #   etcd.database.coreos.com/scope: clusterwide
+// spec:
+//   size: 3
+//   version: "3.2.13"
+func (d *etcd) CreateCluster() *etcdv1beta2.EtcdCluster {
+	return &etcdv1beta2.EtcdCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "etcd",
+			Namespace: constant.TargetNamespace,
+		},
+		Spec: etcdv1beta2.ClusterSpec{
+			Size:    3,
+			Version: "3.2.13",
+		},
+	}
 }
 
 //
 // Reconcile Functions.
 //
 
-func reconcileEtcdClientService(r *CommerceReconciler, etcd Etcd, ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) (ctrl.Result, error) {
-	foundClientService := &corev1.Service{}
-	wantedClientService := etcd.CreateClientService(cr)
-	err := r.Get(ctx, types.NamespacedName{Name: wantedClientService.Name, Namespace: wantedClientService.Namespace}, foundClientService)
+func reconcileEtcdCrd(r *K8sCommerceReconciler, etcd Etcd, ctx context.Context, cr *cachev1alpha1.K8sCommerce, log logr.Logger) (ctrl.Result, error) {
+	foundEtcdCRD := &extapi.CustomResourceDefinition{}
+	wantedEtcdCRD := etcd.CreateCRD()
+	err := r.Get(ctx, types.NamespacedName{Name: wantedEtcdCRD.Name, Namespace: wantedEtcdCRD.Namespace}, foundEtcdCRD)
 
 	// Check if this Deployment already exists
 	if err != nil && errors.IsNotFound(err) {
-		log.Info("Creating a new Service", "Etcd.Namespace", wantedClientService.Namespace, "Service.Name", wantedClientService.Name)
-		err = r.Create(ctx, wantedClientService)
+		log.Info("Creating a new EtcdOperator", "Etcd.Namespace", wantedEtcdCRD.Namespace, "EtcdOperator.Name", wantedEtcdCRD.Name)
+		err = r.Create(ctx, wantedEtcdCRD)
 		if err != nil {
-			log.Error(err, "Failed to create new Service", "Etcd.Namespace", wantedClientService.Namespace, "Service.Name", wantedClientService.Name)
+			log.Error(err, "Failed to create new EtcdOperator", "Etcd.Namespace", wantedEtcdCRD.Namespace, "EtcdOperator.Name", wantedEtcdCRD.Name)
 			return ctrl.Result{}, err
 		}
 		// Requeue the object to update its status
 		return ctrl.Result{Requeue: true}, nil
 	} else if err != nil {
-		log.Error(err, "Failed to get Client Service")
+		log.Error(err, "Failed to get Pod EtcdOperator")
 		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func reconcileEtcdPodServices(r *CommerceReconciler, etcd Etcd, ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger, id int32) (ctrl.Result, error) {
-	foundClientService := &corev1.Service{}
-	wantedClientService := etcd.CreatePodService(cr, id)
-	err := r.Get(ctx, types.NamespacedName{Name: wantedClientService.Name, Namespace: wantedClientService.Namespace}, foundClientService)
+func reconcileEtcdOperator(r *K8sCommerceReconciler, etcd Etcd, ctx context.Context, cr *cachev1alpha1.K8sCommerce, log logr.Logger) (ctrl.Result, error) {
+	foundEtcdOperator := &appsv1.Deployment{}
+	wantedEtcdOperator := etcd.CreateOperator()
+	err := r.Get(ctx, types.NamespacedName{Name: wantedEtcdOperator.Name, Namespace: wantedEtcdOperator.Namespace}, foundEtcdOperator)
 
 	// Check if this Deployment already exists
 	if err != nil && errors.IsNotFound(err) {
-		log.Info("Creating a new Service", "Etcd.Namespace", wantedClientService.Namespace, "Service.Name", wantedClientService.Name)
-		err = r.Create(ctx, wantedClientService)
+		log.Info("Creating a new EtcdOperator", "Etcd.Namespace", wantedEtcdOperator.Namespace, "EtcdOperator.Name", wantedEtcdOperator.Name)
+		err = r.Create(ctx, wantedEtcdOperator)
 		if err != nil {
-			log.Error(err, "Failed to create new Service", "Etcd.Namespace", wantedClientService.Namespace, "Service.Name", wantedClientService.Name)
+			log.Error(err, "Failed to create new EtcdOperator", "Etcd.Namespace", wantedEtcdOperator.Namespace, "EtcdOperator.Name", wantedEtcdOperator.Name)
 			return ctrl.Result{}, err
 		}
 		// Requeue the object to update its status
 		return ctrl.Result{Requeue: true}, nil
 	} else if err != nil {
-		log.Error(err, "Failed to get Pod Service")
+		log.Error(err, "Failed to get Pod EtcdOperator")
 		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func reconcileEtcdPods(r *CommerceReconciler, etcd Etcd, ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger, id int32) (ctrl.Result, error) {
-	foundClientService := &corev1.Pod{}
-	wantedClientService := etcd.CreatePod(cr, id)
-	err := r.Get(ctx, types.NamespacedName{Name: wantedClientService.Name, Namespace: wantedClientService.Namespace}, foundClientService)
+func reconcileEtcCluster(r *K8sCommerceReconciler, etcd Etcd, ctx context.Context, cr *cachev1alpha1.K8sCommerce, log logr.Logger) (ctrl.Result, error) {
+	foundEtcdCluster := &etcdv1beta2.EtcdCluster{}
+	wantedEtcdCluster := etcd.CreateCluster()
+	err := r.Get(ctx, types.NamespacedName{Name: wantedEtcdCluster.Name, Namespace: wantedEtcdCluster.Namespace}, foundEtcdCluster)
 
 	// Check if this Deployment already exists
 	if err != nil && errors.IsNotFound(err) {
-		log.Info("Creating a new Service", "Etcd.Namespace", wantedClientService.Namespace, "Service.Name", wantedClientService.Name)
-		err = r.Create(ctx, wantedClientService)
+		log.Info("Creating a new EtcdCluster", "Etcd.Namespace", wantedEtcdCluster.Namespace, "EtcdCluster.Name", wantedEtcdCluster.Name)
+		err = r.Create(ctx, wantedEtcdCluster)
 		if err != nil {
-			log.Error(err, "Failed to create new Service", "Etcd.Namespace", wantedClientService.Namespace, "Service.Name", wantedClientService.Name)
+			log.Error(err, "Failed to create new EtcdCluster", "Etcd.Namespace", wantedEtcdCluster.Namespace, "EtcdCluster.Name", wantedEtcdCluster.Name)
 			return ctrl.Result{}, err
 		}
 		// Requeue the object to update its status
 		return ctrl.Result{Requeue: true}, nil
 	} else if err != nil {
-		log.Error(err, "Failed to get Pod Service")
+		log.Error(err, "Failed to get Pod EtcdCluster")
 		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *CommerceReconciler) reconcileEtcd(ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) (ctrl.Result, error) {
+func (r *K8sCommerceReconciler) reconcileEtcd(ctx context.Context, cr *cachev1alpha1.K8sCommerce, log logr.Logger) (ctrl.Result, error) {
 	// Define a new Deployment object
 	etcd := NewEtcd()
-	result, err := reconcileEtcdClientService(r, etcd, ctx, cr, log)
+	result, err := reconcileEtcdCrd(r, etcd, ctx, cr, log)
 	if err != nil {
 		return result, err
 	}
 
-	var id int32
-	for id = 0; id < *cr.Spec.Etcd.Replicas; id++ {
-		result, err := reconcileEtcdPodServices(r, etcd, ctx, cr, log, id)
-		if err != nil {
-			return result, err
-		}
+	result, err = reconcileEtcdOperator(r, etcd, ctx, cr, log)
+	if err != nil {
+		return result, err
+	}
 
-		result, err = reconcileEtcdPods(r, etcd, ctx, cr, log, id)
-		if err != nil {
-			return result, err
-		}
+	result, err = reconcileEtcCluster(r, etcd, ctx, cr, log)
+	if err != nil {
+		return result, err
 	}
 
 	return ctrl.Result{}, nil
