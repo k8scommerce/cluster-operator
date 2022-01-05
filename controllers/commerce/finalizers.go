@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	etcdv1beta2 "github.com/coreos/etcd-operator/pkg/apis/etcd/v1beta2"
 	"github.com/go-logr/logr"
 	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1"
-	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -160,19 +158,26 @@ func (r *K8sCommerceReconciler) handleFinalizer(ctx context.Context, cr *cachev1
 	}
 
 	// delete etcd
-	// {
-	// 	if err = r.deleteEtcdCluter(ctx, NewEtcd().CreateCluster()); err != nil {
-	// 		return err
-	// 	}
+	{
+		if err = r.deleteService(ctx, cr, NewEtcd().CreateClientService(cr)); err != nil {
+			return err
+		}
 
-	// 	if err = r.deleteEtcdOperator(ctx, NewEtcd().CreateOperator()); err != nil {
-	// 		return err
-	// 	}
+		if err = r.deleteService(ctx, cr, NewEtcd().CreateHeadlessService(cr)); err != nil {
+			return err
+		}
 
-	// 	if err = r.deleteEtcdCRD(ctx, NewEtcd().CreateCRD()); err != nil {
-	// 		return err
-	// 	}
-	// }
+		var i int32
+		for i = 0; i < *cr.Spec.Etcd.Replicas; i++ {
+			if err = r.deleteService(ctx, cr, NewEtcd().CreatePodService(cr, i)); err != nil {
+				return err
+			}
+
+			if err = r.deleteEtcdPod(ctx, cr, i); err != nil {
+				return err
+			}
+		}
+	}
 
 	// delete the target namespace
 	if err = r.namespaceFinalDelete(ctx, cr); err != nil {
@@ -230,10 +235,10 @@ func (r *K8sCommerceReconciler) deleteEtcdOperator(ctx context.Context, dep *app
 	return nil
 }
 
-func (r *K8sCommerceReconciler) deleteEtcdCluter(ctx context.Context, dep *etcdv1beta2.EtcdCluster) error {
-	// s := NewEtcd()
-	// dep := s.CreateCluster()
-	depFound := &etcdv1beta2.EtcdCluster{}
+func (r *K8sCommerceReconciler) deleteEtcdPod(ctx context.Context, cr *cachev1alpha1.K8sCommerce, id int32) error {
+	s := NewEtcd()
+	dep := s.CreatePod(cr, id)
+	depFound := &corev1.Pod{}
 	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
 	if err != nil && errors.IsNotFound(err) {
 		return nil
@@ -243,29 +248,10 @@ func (r *K8sCommerceReconciler) deleteEtcdCluter(ctx context.Context, dep *etcdv
 	}
 	err = r.Delete(ctx, dep)
 	if err != nil {
-		r.Log.Error(err, "Failed to delete EtcdCluster")
+		r.Log.Error(err, "Failed to delete Pod")
 		return err
 	}
-	r.Log.Info(fmt.Sprintf("EtcdCluster deleted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
-
-	return nil
-}
-
-func (r *K8sCommerceReconciler) deleteEtcdCRD(ctx context.Context, dep *extapi.CustomResourceDefinition) error {
-	depFound := &extapi.CustomResourceDefinition{}
-	err := r.Get(ctx, types.NamespacedName{Name: dep.Name, Namespace: dep.Namespace}, depFound)
-	if err != nil && errors.IsNotFound(err) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	err = r.Delete(ctx, dep)
-	if err != nil {
-		r.Log.Error(err, "Failed to delete Deployment")
-		return err
-	}
-	r.Log.Info(fmt.Sprintf("Deployment deleted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
+	r.Log.Info(fmt.Sprintf("Pod deleted: %s", "Name: "+dep.Name+" Namespace: "+dep.Namespace))
 
 	return nil
 }

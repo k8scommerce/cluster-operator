@@ -139,7 +139,7 @@ type K8sCommerceSpec struct {
 	CoreMicroServices CoreMicroServices `json:"coreMicroServices"`
 	AddOnServices     []MicroService    `json:"addOnMicroServices,omitempty"`
 	Database          *Database         `json:"database,omitempty"`
-	// Etcd              Etcd              `json:"etcd"`
+	Etcd              Etcd              `json:"etcd"`
 }
 
 // K8sCommerceStatus defines the observed state of K8sCommerce
