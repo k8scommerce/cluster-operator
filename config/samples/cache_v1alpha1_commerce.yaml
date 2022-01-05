@@ -1,7 +1,7 @@
 apiVersion: cache.commerce.k8scommerce.com/v1alpha1
 kind: K8sCommerce
 metadata:
-  name: commerce
+  name: k8scommerce
   namespace: k8scommerce-system
 spec:
   corsOrigins:
@@ -50,13 +50,13 @@ spec:
       name: cart
       image: localhost:5000/cart:latest
 
-    # customer:
-    #   name: customer
-    #   image: localhost:5000/customer:latest
+    customer:
+      name: customer
+      image: localhost:5000/customer:latest
 
-    # email:
-    #   name: email
-    #   image: localhost:5000/email:latest
+    email:
+      name: email
+      image: localhost:5000/email:latest
 
     inventory:
       name: inventory
@@ -66,33 +66,33 @@ spec:
       name: othersbought
       image: localhost:5000/othersbought:latest
 
-    # payment:
-    #   name: payment
-    #   image: localhost:5000/payment:latest
+    payment:
+      name: payment
+      image: localhost:5000/payment:latest
 
-    # product:
-    #   name: product
-    #   image: localhost:5000/product:latest
+    product:
+      name: product
+      image: localhost:5000/product:latest
 
-    # shipping:
-    #   name: shipping
-    #   image: localhost:5000/shipping:latest
+    shipping:
+      name: shipping
+      image: localhost:5000/shipping:latest
 
-    # similarProducts:
-    #   name: similarproducts
-    #   image: localhost:5000/similarproducts:latest
+    similarProducts:
+      name: similarproducts
+      image: localhost:5000/similarproducts:latest
 
-    # store:
-    #   name: store
-    #   image: localhost:5000/store:latest
+    store:
+      name: store
+      image: localhost:5000/store:latest
 
-    # user:
-    #   name: user
-    #   image: localhost:5000/user:latest
+    user:
+      name: user
+      image: localhost:5000/user:latest
 
-    # warehouse:
-    #   name: warehouse
-    #   image: localhost:5000/warehouse:latest
+    warehouse:
+      name: warehouse
+      image: localhost:5000/warehouse:latest
 
-  # etcd:
-  #   replicas: 3
+  etcd:
+    replicas: 3

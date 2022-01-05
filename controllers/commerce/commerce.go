@@ -116,11 +116,11 @@ func (r *K8sCommerceReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 				return result, err
 			}
 
-			// // Reconcile Etc
-			// result, err = r.reconcileEtcd(ctx, commerce, log)
-			// if err != nil {
-			// 	return result, err
-			// }
+			// Reconcile Etc
+			result, err = r.reconcileEtcd(ctx, commerce, log)
+			if err != nil {
+				return result, err
+			}
 		}
 
 		// GatewayClient

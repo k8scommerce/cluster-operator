@@ -1325,6 +1325,12 @@ spec:
                   secretName:
                     type: string
                 type: object
+              etcd:
+                properties:
+                  replicas:
+                    format: int32
+                    type: integer
+                type: object
               hosts:
                 properties:
                   admin:
@@ -1354,6 +1360,7 @@ spec:
             required:
             - coreMicroServices
             - corsOrigins
+            - etcd
             - hosts
             type: object
           status:

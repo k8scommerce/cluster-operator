@@ -1,116 +1,207 @@
-apiVersion: apiextensions.k8s.io/v1beta1
-kind: CustomResourceDefinition
+apiVersion: v1
+kind: Service
 metadata:
-  name: etcdclusters.etcd.database.coreos.com
+  name: etcd-client
+  namespace: k8scommerce
 spec:
-  group: etcd.database.coreos.com
-  names:
-    kind: EtcdCluster
-    listKind: EtcdClusterList
-    plural: etcdclusters
-    shortNames:
-      - etcdclus
-      - etcd
-    singular: etcdcluster
-  scope: Namespaced
-  version: v1beta2
-  versions:
-    - name: v1beta2
-      served: true
-      storage: true
+  type: LoadBalancer
+  selector:
+    app: etcd
+  ports:
+    - name: etcd-client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
 ---
 apiVersion: v1
-kind: ServiceAccount
+kind: Service
 metadata:
-  name: etcd-operator-sa
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: etcd-operator-role
-  namespace: k8scommerce-system
-rules:
-  - apiGroups:
-      - etcd.database.coreos.com
-    resources:
-      - etcdclusters
-      - etcdbackups
-      - etcdrestores
-    verbs:
-      - "*"
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-      - services
-      - endpoints
-      - persistentvolumeclaims
-      - events
-    verbs:
-      - "*"
-  - apiGroups:
-      - apps
-    resources:
-      - deployments
-    verbs:
-      - "*"
-  # The following permissions can be removed if not using S3 backup and TLS
-  - apiGroups:
-      - ""
-    resources:
-      - secrets
-    verbs:
-      - get
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: etcd-operator-rolebinding
-  namespace: k8scommerce-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: etcd-operator-role
-subjects:
-  - kind: ServiceAccount
-    name: default
-    namespace: k8scommerce-system
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: etcd-operator
-  namespace: k8scommerce-system
-  labels:
-    name: etcd-operator
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      name: etcd-operator
-  template:
-    metadata:
-      labels:
-        name: etcd-operator
-    spec:
-      containers:
-        - name: etcd-operator
-          image: quay.io/coreos/etcd-operator:v0.9.4
-          command:
-            - etcd-operator
-          # Uncomment to act for resources in all namespaces. More information in doc/user/clusterwide.md
-          #- -cluster-wide
-          env:
-            - name: MY_POD_NAMESPACE
-              value: k8scommerce
-            - name: MY_POD_NAME
-              value: etcd
----
-apiVersion: etcd.database.coreos.com/v1beta2
-kind: EtcdCluster
-metadata:
+  name: etcd-headless
   namespace: k8scommerce
-  name: etcd
 spec:
-  size: 3
-  version: 3.2.13
+  clusterIP: None
+  selector:
+    app: etcd
+  ports:
+    - name: client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
+    - name: peer
+      port: 2380
+      protocol: TCP
+      targetPort: 2380
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: etcd
+    etcd_node: etcd-0
+  name: etcd-0
+  namespace: k8scommerce
+spec:
+  selector:
+    etcd_node: etcd-0
+  ports:
+    - name: client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
+    - name: peer
+      port: 2380
+      protocol: TCP
+      targetPort: 2380
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd-0
+  namespace: k8scommerce
+  labels:
+    app: etcd
+    etcd_node: etcd-0
+spec:
+  containers:
+    - command:
+        - /usr/local/bin/etcd
+        - --name
+        - etcd-0
+        - --initial-advertise-peer-urls
+        - http://etcd-0:2380
+        - --listen-peer-urls
+        - http://0.0.0.0:2380
+        - --listen-client-urls
+        - http://0.0.0.0:2379
+        - --advertise-client-urls
+        - http://etcd-0:2379
+        - --initial-cluster
+        - etcd-0=http://etcd-0:2380,etcd1=http://etcd-1:2380,etcd2=http://etcd-2:2380
+        - --initial-cluster-state
+        - new
+      image: quay.io/coreos/etcd:latest
+      name: etcd-0
+      ports:
+        - containerPort: 2379
+          name: client
+          protocol: TCP
+        - containerPort: 2380
+          name: server
+          protocol: TCP
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: etcd
+    etcd_node: etcd-1
+  name: etcd-1
+  namespace: k8scommerce
+spec:
+  selector:
+    etcd_node: etcd-1
+  ports:
+    - name: client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
+    - name: peer
+      port: 2380
+      protocol: TCP
+      targetPort: 2380
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd-1
+  namespace: k8scommerce
+  labels:
+    app: etcd
+    etcd_node: etcd-1
+spec:
+  containers:
+    - image: quay.io/coreos/etcd:latest
+      name: etcd-1
+      ports:
+        - containerPort: 2379
+          name: client
+          protocol: TCP
+        - containerPort: 2380
+          name: server
+          protocol: TCP
+      command:
+        - /usr/local/bin/etcd
+        - --name
+        - etcd-1
+        - --initial-advertise-peer-urls
+        - http://etcd-1:2380
+        - --listen-peer-urls
+        - http://0.0.0.0:2380
+        - --listen-client-urls
+        - http://0.0.0.0:2379
+        - --advertise-client-urls
+        - http://etcd-1:2379
+        - --initial-cluster
+        - etcd-0=http://etcd-0:2380,etcd-1=http://etcd-1:2380,etcd-2=http://etcd-2:2380
+        - --initial-cluster-state
+        - new
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: etcd
+    etcd_node: etcd-2
+  name: etcd-2
+  namespace: k8scommerce
+spec:
+  selector:
+    etcd_node: etcd-2
+  ports:
+    - name: client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
+    - name: peer
+      port: 2380
+      protocol: TCP
+      targetPort: 2380
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd-2
+  namespace: k8scommerce
+  labels:
+    app: etcd
+    etcd_node: etcd-2
+spec:
+  containers:
+    - image: quay.io/coreos/etcd:latest
+      name: etcd-2
+      ports:
+        - containerPort: 2379
+          name: client
+          protocol: TCP
+        - containerPort: 2380
+          name: server
+          protocol: TCP
+      command:
+        - /usr/local/bin/etcd
+        - --name
+        - etcd-2
+        - --initial-advertise-peer-urls
+        - http://etcd-2:2380
+        - --listen-peer-urls
+        - http://0.0.0.0:2380
+        - --listen-client-urls
+        - http://0.0.0.0:2379
+        - --advertise-client-urls
+        - http://etcd-2:2379
+        - --initial-cluster
+        - etcd-0=http://etcd-0:2380,etcd-1=http://etcd-1:2380,etcd-2=http://etcd-2:2380
+        - --initial-cluster-state
+        - new
+  restartPolicy: Always
