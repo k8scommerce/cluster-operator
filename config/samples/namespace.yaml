@@ -1,4 +1,9 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: k8scom-system
+  name: k8scommerce-system
+# ---
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: k8scommerce

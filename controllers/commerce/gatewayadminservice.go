@@ -18,7 +18,7 @@ import (
 //go:generate mockgen -destination ../internal/controllers/commerce/mocks/gatewayadminservice.go -package=Mocks github.com/k8scommerce/k8scommerce/controllers/commerce Service
 // GatewayAdminService interface.
 type GatewayAdminService interface {
-	Create(cr *cachev1alpha1.Commerce) *corev1.Service
+	Create(cr *cachev1alpha1.K8sCommerce) *corev1.Service
 }
 
 // NewGatewayAdminService creates a real implementation of the Service interface.
@@ -29,7 +29,7 @@ func NewGatewayAdminService() GatewayAdminService {
 type gatewayAdminService struct{}
 
 // Create returns a new service.
-func (s *gatewayAdminService) Create(cr *cachev1alpha1.Commerce) *corev1.Service {
+func (s *gatewayAdminService) Create(cr *cachev1alpha1.K8sCommerce) *corev1.Service {
 	if cr.Spec.CoreMicroServices.GatewayAdmin == nil {
 		return &corev1.Service{}
 	}
@@ -62,7 +62,7 @@ func (s *gatewayAdminService) Create(cr *cachev1alpha1.Commerce) *corev1.Service
 	}
 }
 
-func (r *CommerceReconciler) reconcileGatewayAdminService(ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) (ctrl.Result, error) {
+func (r *K8sCommerceReconciler) reconcileGatewayAdminService(ctx context.Context, cr *cachev1alpha1.K8sCommerce, log logr.Logger) (ctrl.Result, error) {
 	// Define a new Service object
 	s := NewGatewayAdminService()
 	found := &corev1.Service{}

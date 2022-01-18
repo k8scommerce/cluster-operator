@@ -9,7 +9,7 @@ import (
 //go:generate mockgen -destination ../internal/controllers/commerce/mocks/gatewayadmin.go -package=Mocks github.com/k8scommerce/k8scommerce/controllers/commerce mode Deployment
 // GatewayAdmin interface.
 type GatewayAdmin interface {
-	Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment
+	Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment
 }
 
 // NewGatewayAdmin creates a new gatewayAdmin.
@@ -20,7 +20,7 @@ func NewGatewayAdmin() GatewayAdmin {
 type gatewayAdmin struct{}
 
 // Create Returns a new gatewayAdmin without replicas configured - replicas will be configured in the sync loop.
-func (d *gatewayAdmin) Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment {
+func (d *gatewayAdmin) Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment {
 	dep := NewMicroserviceDeployment(cr.Spec.CoreMicroServices.GatewayAdmin)
 	return dep.Create(cr)
 }

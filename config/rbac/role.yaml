@@ -10,39 +10,20 @@ rules:
   - '*'
   resources:
   - configmaps
-  - secrets
-  verbs:
-  - '*'
-- apiGroups:
-  - '*'
-  resources:
   - deployments
-  verbs:
-  - '*'
-- apiGroups:
-  - '*'
-  resources:
   - endpoints
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - '*'
-  resources:
   - events
-  verbs:
-  - '*'
-- apiGroups:
-  - '*'
-  resources:
   - namespaces
+  - persistentvolumeclaims
+  - pods
+  - secrets
+  - services
   verbs:
   - '*'
 - apiGroups:
-  - '*'
+  - apiextensions.k8s.io
   resources:
-  - pods
+  - customresourcedefinitions
   verbs:
   - '*'
 - apiGroups:
@@ -83,6 +64,14 @@ rules:
   - ""
   resources:
   - services
+  verbs:
+  - '*'
+- apiGroups:
+  - etcd.database.coreos.com
+  resources:
+  - etcdbackups
+  - etcdclusters
+  - etcdrestores
   verbs:
   - '*'
 - apiGroups:

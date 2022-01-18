@@ -1,0 +1,207 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd-client
+  namespace: k8scommerce
+spec:
+  type: LoadBalancer
+  selector:
+    app: etcd
+  ports:
+    - name: etcd-client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: etcd-headless
+  namespace: k8scommerce
+spec:
+  clusterIP: None
+  selector:
+    app: etcd
+  ports:
+    - name: client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
+    - name: peer
+      port: 2380
+      protocol: TCP
+      targetPort: 2380
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: etcd
+    etcd_node: etcd-0
+  name: etcd-0
+  namespace: k8scommerce
+spec:
+  selector:
+    etcd_node: etcd-0
+  ports:
+    - name: client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
+    - name: peer
+      port: 2380
+      protocol: TCP
+      targetPort: 2380
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd-0
+  namespace: k8scommerce
+  labels:
+    app: etcd
+    etcd_node: etcd-0
+spec:
+  containers:
+    - command:
+        - /usr/local/bin/etcd
+        - --name
+        - etcd-0
+        - --initial-advertise-peer-urls
+        - http://etcd-0:2380
+        - --listen-peer-urls
+        - http://0.0.0.0:2380
+        - --listen-client-urls
+        - http://0.0.0.0:2379
+        - --advertise-client-urls
+        - http://etcd-0:2379
+        - --initial-cluster
+        - etcd-0=http://etcd-0:2380,etcd1=http://etcd-1:2380,etcd2=http://etcd-2:2380
+        - --initial-cluster-state
+        - new
+      image: quay.io/coreos/etcd:latest
+      name: etcd-0
+      ports:
+        - containerPort: 2379
+          name: client
+          protocol: TCP
+        - containerPort: 2380
+          name: server
+          protocol: TCP
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: etcd
+    etcd_node: etcd-1
+  name: etcd-1
+  namespace: k8scommerce
+spec:
+  selector:
+    etcd_node: etcd-1
+  ports:
+    - name: client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
+    - name: peer
+      port: 2380
+      protocol: TCP
+      targetPort: 2380
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd-1
+  namespace: k8scommerce
+  labels:
+    app: etcd
+    etcd_node: etcd-1
+spec:
+  containers:
+    - image: quay.io/coreos/etcd:latest
+      name: etcd-1
+      ports:
+        - containerPort: 2379
+          name: client
+          protocol: TCP
+        - containerPort: 2380
+          name: server
+          protocol: TCP
+      command:
+        - /usr/local/bin/etcd
+        - --name
+        - etcd-1
+        - --initial-advertise-peer-urls
+        - http://etcd-1:2380
+        - --listen-peer-urls
+        - http://0.0.0.0:2380
+        - --listen-client-urls
+        - http://0.0.0.0:2379
+        - --advertise-client-urls
+        - http://etcd-1:2379
+        - --initial-cluster
+        - etcd-0=http://etcd-0:2380,etcd-1=http://etcd-1:2380,etcd-2=http://etcd-2:2380
+        - --initial-cluster-state
+        - new
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: etcd
+    etcd_node: etcd-2
+  name: etcd-2
+  namespace: k8scommerce
+spec:
+  selector:
+    etcd_node: etcd-2
+  ports:
+    - name: client
+      port: 2379
+      protocol: TCP
+      targetPort: 2379
+    - name: peer
+      port: 2380
+      protocol: TCP
+      targetPort: 2380
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd-2
+  namespace: k8scommerce
+  labels:
+    app: etcd
+    etcd_node: etcd-2
+spec:
+  containers:
+    - image: quay.io/coreos/etcd:latest
+      name: etcd-2
+      ports:
+        - containerPort: 2379
+          name: client
+          protocol: TCP
+        - containerPort: 2380
+          name: server
+          protocol: TCP
+      command:
+        - /usr/local/bin/etcd
+        - --name
+        - etcd-2
+        - --initial-advertise-peer-urls
+        - http://etcd-2:2380
+        - --listen-peer-urls
+        - http://0.0.0.0:2380
+        - --listen-client-urls
+        - http://0.0.0.0:2379
+        - --advertise-client-urls
+        - http://etcd-2:2379
+        - --initial-cluster
+        - etcd-0=http://etcd-0:2380,etcd-1=http://etcd-1:2380,etcd-2=http://etcd-2:2380
+        - --initial-cluster-state
+        - new
+  restartPolicy: Always

@@ -2,7 +2,6 @@ package commerce
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"github.com/go-logr/logr"
@@ -15,13 +14,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func (r *CommerceReconciler) reconcileDeployment(ctx context.Context, cr *cachev1alpha1.Commerce, d ReconcilableDeployment, log logr.Logger) (ctrl.Result, error) {
+func (r *K8sCommerceReconciler) reconcileDeployment(ctx context.Context, cr *cachev1alpha1.K8sCommerce, d ReconcilableDeployment, log logr.Logger) (ctrl.Result, error) {
 
 	// make sure etcd is ready
-	if r.getRunningEtcdPods(cr) != *cr.Spec.Etcd.Replicas {
-		err := fmt.Errorf("etcd controllers not ready")
-		return ctrl.Result{}, err
-	}
+	// if r.getRunningEtcdPods(cr) != *cr.Spec.Etcd.Replicas {
+	// 	err := fmt.Errorf("etcd controllers not ready")
+	// 	return ctrl.Result{}, err
+	// }
 
 	// Define a new Deployment object
 	found := &appsv1.Deployment{}

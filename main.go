@@ -24,6 +24,9 @@ import (
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
+	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
+	"github.com/k8scommerce/cluster-operator/controllers/commerce"
+	"github.com/k8scommerce/cluster-operator/controllers/constant"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -31,10 +34,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
-	cachev1alpha1 "github.com/k8scommerce/cluster-operator/api/v1alpha1"
-	"github.com/k8scommerce/cluster-operator/controllers/commerce"
-	"github.com/k8scommerce/cluster-operator/controllers/constant"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -85,12 +84,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&commerce.CommerceReconciler{
+	if err = (&commerce.K8sCommerceReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Commerce"),
+		Log:    ctrl.Log.WithName("controllers").WithName("K8sCommerce"),
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "Commerce")
+		setupLog.Error(err, "unable to create controller", "controller", "K8sCommerce")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder

@@ -9,7 +9,7 @@ import (
 //go:generate mockgen -destination ../internal/controllers/commerce/mocks/inventory.go -package=Mocks github.com/k8scommerce/k8scommerce/controllers/commerce mode Deployment
 // Inventory interface.
 type Inventory interface {
-	Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment
+	Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment
 }
 
 // NewInventory creates a new inventory.
@@ -20,7 +20,7 @@ func NewInventory() Inventory {
 type inventory struct{}
 
 // Create Returns a new inventory without replicas configured - replicas will be configured in the sync loop.
-func (d *inventory) Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment {
+func (d *inventory) Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment {
 	dep := NewMicroserviceDeployment(cr.Spec.CoreMicroServices.Inventory)
 	return dep.Create(cr)
 }

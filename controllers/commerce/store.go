@@ -9,7 +9,7 @@ import (
 //go:generate mockgen -destination ../internal/controllers/commerce/mocks/store.go -package=Mocks github.com/k8scommerce/k8scommerce/controllers/commerce mode Deployment
 // Store interface.
 type Store interface {
-	Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment
+	Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment
 }
 
 // NewStore creates a new store.
@@ -20,7 +20,7 @@ func NewStore() Store {
 type store struct{}
 
 // Create Returns a new store without replicas configured - replicas will be configured in the sync loop.
-func (d *store) Create(cr *cachev1alpha1.Commerce) *appsv1.Deployment {
+func (d *store) Create(cr *cachev1alpha1.K8sCommerce) *appsv1.Deployment {
 	dep := NewMicroserviceDeployment(cr.Spec.CoreMicroServices.Store)
 	return dep.Create(cr)
 }

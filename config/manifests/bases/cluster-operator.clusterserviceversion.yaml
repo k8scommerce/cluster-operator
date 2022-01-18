@@ -10,9 +10,9 @@ spec:
   apiservicedefinitions: {}
   customresourcedefinitions:
     owned:
-    - description: Commerce is the Schema for the commerces API
-      displayName: Commerce
-      kind: Commerce
+    - description: K8sCommerce is the Schema for the commerces API
+      displayName: K8sCommerce
+      kind: K8sCommerce
       name: commerces.cache.commerce.k8scommerce.com
       version: v1alpha1
   description: Kubernetes native ecommerce platform
@@ -41,6 +41,6 @@ spec:
     url: https://cluster-operator.domain
   maturity: alpha
   provider:
-    name: K8s Commerce
+    name: K8sCommerce
     url: k8scommerce.com
   version: 0.0.0
