@@ -17,7 +17,7 @@ import (
 
 // GatewayClientIngress interface used to create the kubernetes ingress.
 type GatewayClientIngress interface {
-	Create(cr *cachev1alpha1.Commerce) *networking.Ingress
+	Create(cr *cachev1alpha1.K8sCommerce) *networking.Ingress
 }
 
 // NewIngress instantiates an real implementation of the interface.
@@ -28,7 +28,7 @@ func NewGatewayClientIngress() GatewayClientIngress {
 type gatewayClientIngress struct{}
 
 // Create returns a new route.
-func (r *gatewayClientIngress) Create(cr *cachev1alpha1.Commerce) *networking.Ingress {
+func (r *gatewayClientIngress) Create(cr *cachev1alpha1.K8sCommerce) *networking.Ingress {
 	if cr.Spec.CoreMicroServices.GatewayClient == nil {
 		return &networking.Ingress{}
 	}
@@ -109,7 +109,7 @@ func (r *gatewayClientIngress) Create(cr *cachev1alpha1.Commerce) *networking.In
 
 }
 
-func (r *CommerceReconciler) reconcileGatewayClientIngress(ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) (ctrl.Result, error) {
+func (r *K8sCommerceReconciler) reconcileGatewayClientIngress(ctx context.Context, cr *cachev1alpha1.K8sCommerce, log logr.Logger) (ctrl.Result, error) {
 	i := NewGatewayClientIngress()
 	found := &networking.Ingress{}
 	wanted := i.Create(cr)

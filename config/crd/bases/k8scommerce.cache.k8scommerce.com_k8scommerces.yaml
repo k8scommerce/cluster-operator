@@ -6,20 +6,20 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.7.0
   creationTimestamp: null
-  name: commerces.cache.commerce.k8scommerce.com
+  name: k8scommerce.cache.k8scommerce.com
 spec:
-  group: cache.commerce.k8scommerce.com
+  group: k8scommerces.cache.k8scommerce.com
   names:
-    kind: Commerce
-    listKind: CommerceList
-    plural: commerces
-    singular: commerce
+    kind: K8sCommerce
+    listKind: K8sCommerceList
+    plural: k8scommerces
+    singular: k8scommerce
   scope: Namespaced
   versions:
   - name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Commerce is the Schema for the commerces API
+        description: K8sCommerce is the Schema for the commerces API
         properties:
           apiVersion:
             description: 'APIVersion defines the versioned schema of this representation
@@ -34,7 +34,7 @@ spec:
           metadata:
             type: object
           spec:
-            description: CommerceSpec defines the desired state of Commerce
+            description: K8sCommerceSpec defines the desired state of K8sCommerce
             properties:
               addOnMicroServices:
                 items:
@@ -126,6 +126,261 @@ spec:
               coreMicroServices:
                 properties:
                   cart:
+                    properties:
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
+                      image:
+                        type: string
+                      lifecycle:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      livenessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      name:
+                        type: string
+                      port:
+                        format: int32
+                        type: integer
+                      readinessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      replicas:
+                        format: int32
+                        minimum: 2
+                        type: integer
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                        type: object
+                      vars:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    required:
+                    - image
+                    - name
+                    type: object
+                  customer:
+                    properties:
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
+                      image:
+                        type: string
+                      lifecycle:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      livenessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      name:
+                        type: string
+                      port:
+                        format: int32
+                        type: integer
+                      readinessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      replicas:
+                        format: int32
+                        minimum: 2
+                        type: integer
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                        type: object
+                      vars:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    required:
+                    - image
+                    - name
+                    type: object
+                  email:
+                    properties:
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
+                      image:
+                        type: string
+                      lifecycle:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      livenessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      name:
+                        type: string
+                      port:
+                        format: int32
+                        type: integer
+                      readinessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      replicas:
+                        format: int32
+                        minimum: 2
+                        type: integer
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                        type: object
+                      vars:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    required:
+                    - image
+                    - name
+                    type: object
+                  gatewayAdmin:
                     properties:
                       args:
                         items:
@@ -465,7 +720,177 @@ spec:
                     - image
                     - name
                     type: object
+                  payment:
+                    properties:
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
+                      image:
+                        type: string
+                      lifecycle:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      livenessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      name:
+                        type: string
+                      port:
+                        format: int32
+                        type: integer
+                      readinessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      replicas:
+                        format: int32
+                        minimum: 2
+                        type: integer
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                        type: object
+                      vars:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    required:
+                    - image
+                    - name
+                    type: object
                   product:
+                    properties:
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
+                      image:
+                        type: string
+                      lifecycle:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      livenessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      name:
+                        type: string
+                      port:
+                        format: int32
+                        type: integer
+                      readinessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      replicas:
+                        format: int32
+                        minimum: 2
+                        type: integer
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                        type: object
+                      vars:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    required:
+                    - image
+                    - name
+                    type: object
+                  shipping:
                     properties:
                       args:
                         items:
@@ -635,7 +1060,177 @@ spec:
                     - image
                     - name
                     type: object
+                  store:
+                    properties:
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
+                      image:
+                        type: string
+                      lifecycle:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      livenessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      name:
+                        type: string
+                      port:
+                        format: int32
+                        type: integer
+                      readinessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      replicas:
+                        format: int32
+                        minimum: 2
+                        type: integer
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                        type: object
+                      vars:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    required:
+                    - image
+                    - name
+                    type: object
                   user:
+                    properties:
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      command:
+                        items:
+                          type: string
+                        type: array
+                      image:
+                        type: string
+                      lifecycle:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      livenessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      name:
+                        type: string
+                      port:
+                        format: int32
+                        type: integer
+                      readinessProbe:
+                        properties:
+                          initialDelaySeconds:
+                            default: 5
+                            format: int32
+                            type: integer
+                          periodSeconds:
+                            default: 10
+                            format: int32
+                            type: integer
+                          port:
+                            default: 8080
+                            type: integer
+                        type: object
+                      replicas:
+                        format: int32
+                        minimum: 2
+                        type: integer
+                      resources:
+                        properties:
+                          limits:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                          requests:
+                            properties:
+                              cpu:
+                                default: 500m
+                                type: string
+                              memory:
+                                default: 256Mi
+                                type: string
+                            type: object
+                        type: object
+                      vars:
+                        additionalProperties:
+                          type: string
+                        type: object
+                    required:
+                    - image
+                    - name
+                    type: object
+                  warehouse:
                     properties:
                       args:
                         items:
@@ -769,7 +1364,7 @@ spec:
             - hosts
             type: object
           status:
-            description: CommerceStatus defines the observed state of Commerce
+            description: K8sCommerceStatus defines the observed state of K8sCommerce
             properties:
               observedGeneration:
                 description: 'INSERT ADDITIONAL STATUS FIELD - define observed state

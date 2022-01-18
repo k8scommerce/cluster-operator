@@ -1,8 +1,8 @@
 apiVersion: cache.commerce.k8scommerce.com/v1alpha1
-kind: Commerce
+kind: K8sCommerce
 metadata:
-  name: commerce
-  namespace: k8scom-system
+  name: k8scommerce
+  namespace: k8scommerce-system
 spec:
   corsOrigins:
     - http://local.k8scommerce.com:4200
@@ -20,31 +20,31 @@ spec:
     secretName: k8scommerce-db-secret
 
   coreMicroServices:
-    gatewayClient:
-      name: gatewayclient
-      image: localhost:5000/client:latest
-      port: 8888
-      livenessProbe:
-        initialDelaySeconds: 5
-        periodSeconds: 10
-        port: 8888
-      readinessProbe:
-        initialDelaySeconds: 5
-        periodSeconds: 10
-        port: 8888
+    # gatewayClient:
+    #   name: gatewayclient
+    #   image: localhost:5000/client:latest
+    #   port: 8888
+    #   livenessProbe:
+    #     initialDelaySeconds: 5
+    #     periodSeconds: 10
+    #     port: 8888
+    #   readinessProbe:
+    #     initialDelaySeconds: 5
+    #     periodSeconds: 10
+    #     port: 8888
 
-    gatewayAdmin:
-      name: gatewayadmin
-      image: localhost:5000/admin:latest
-      port: 8888
-      livenessProbe:
-        initialDelaySeconds: 5
-        periodSeconds: 10
-        port: 8888
-      readinessProbe:
-        initialDelaySeconds: 5
-        periodSeconds: 10
-        port: 8888
+    # gatewayAdmin:
+    #   name: gatewayadmin
+    #   image: localhost:5000/admin:latest
+    #   port: 8888
+    #   livenessProbe:
+    #     initialDelaySeconds: 5
+    #     periodSeconds: 10
+    #     port: 8888
+    #   readinessProbe:
+    #     initialDelaySeconds: 5
+    #     periodSeconds: 10
+    #     port: 8888
 
     cart:
       name: cart

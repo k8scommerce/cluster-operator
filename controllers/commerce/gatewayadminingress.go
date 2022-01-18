@@ -17,7 +17,7 @@ import (
 
 // GatewayAdminIngress interface used to create the kubernetes ingress.
 type GatewayAdminIngress interface {
-	Create(cr *cachev1alpha1.Commerce) *networking.Ingress
+	Create(cr *cachev1alpha1.K8sCommerce) *networking.Ingress
 }
 
 // NewIngress instantiates an real implementation of the interface.
@@ -28,7 +28,7 @@ func NewGatewayAdminIngress() GatewayAdminIngress {
 type gatewayAdminIngress struct{}
 
 // Create returns a new route.
-func (r *gatewayAdminIngress) Create(cr *cachev1alpha1.Commerce) *networking.Ingress {
+func (r *gatewayAdminIngress) Create(cr *cachev1alpha1.K8sCommerce) *networking.Ingress {
 	if cr.Spec.CoreMicroServices.GatewayAdmin == nil {
 		return &networking.Ingress{}
 	}
@@ -108,7 +108,7 @@ func (r *gatewayAdminIngress) Create(cr *cachev1alpha1.Commerce) *networking.Ing
 
 }
 
-func (r *CommerceReconciler) reconcileGatewayAdminIngress(ctx context.Context, cr *cachev1alpha1.Commerce, log logr.Logger) (ctrl.Result, error) {
+func (r *K8sCommerceReconciler) reconcileGatewayAdminIngress(ctx context.Context, cr *cachev1alpha1.K8sCommerce, log logr.Logger) (ctrl.Result, error) {
 	i := NewGatewayAdminIngress()
 	found := &networking.Ingress{}
 	wanted := i.Create(cr)
