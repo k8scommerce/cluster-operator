@@ -8,7 +8,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This program built for i386-apple-darwin11.3.0
  
 
-# Make data base, printed on Tue Jan  4 01:17:02 2022
+# Make data base, printed on Mon Jan 17 20:57:38 2022
 
 # Variables
 
@@ -23,6 +23,7 @@ VSCODE_LOG_NATIVE = false
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
 # makefile (from `Makefile', line 136)
+ 
 PROJECT_DIR := /Users/almatuck/workspaces/k8scommerce/cluster-operator
 # automatic
 @D = $(patsubst %/,%,$(dir $@))
@@ -37,7 +38,7 @@ VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupp
 # environment
 _ = /usr/bin/make
 # environment
-VSCODE_PID = 94099
+VSCODE_PID = 361
 # environment
 arch = amd64
 # environment
@@ -57,7 +58,7 @@ VSCODE_VERBOSE_LOGGING = true
 # environment
 __CFBundleIdentifier = com.microsoft.VSCode
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /var/folders/p3/3g61cfqj15vb1zjgq9gt0tnr0000gn/T/vscode-ipc-becf66cc-7c81-4806-8fe4-e04f4936bb38.sock
+VSCODE_IPC_HOOK_EXTHOST = /var/folders/p3/3g61cfqj15vb1zjgq9gt0tnr0000gn/T/vscode-ipc-7409d2b7-113c-49ff-9c3b-f73ce10ae0b3.sock
 # environment
 VSCODE_CWD = /
 # environment
@@ -73,6 +74,8 @@ AWS_ECR_USERNAM = AWS
 # environment
 GOPATH = /Users/almatuck/go
 # environment
+LaunchInstanceID = 7E47C4CE-F5FC-444D-A20E-0699C46B8874
+# environment
 VSCODE_LOG_STACK = false
 # environment
 ELECTRON_RUN_AS_NODE = 1
@@ -83,7 +86,7 @@ ECOMM_CONFIG = /Users/almatuck/workspaces/localrivet/ecomm/env/config.example.ya
 # makefile (from `Makefile', line 123)
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 # environment
-SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.BsOfNcecn6/Listeners
+SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.bdFeGuxO6p/Listeners
 # makefile (from `Makefile', line 186)
 CATALOG_IMG = $(IMAGE_TAG_BASE)-catalog:v$(VERSION)
 # automatic
@@ -200,6 +203,8 @@ LC_ALL = C
 ECOMM_DEV_AWS_DEFAULT_REGION = us-west-1
 # environment
 API_CONFIG = /Users/almatuck/workspaces/crowdgains/core-api/env/config.local.yaml
+# environment
+SECURITYSESSIONID = 186aa
 # automatic
 ^F = $(notdir $^)
 # default
@@ -221,7 +226,7 @@ ENVTEST_K8S_VERSION = 1.22
 # environment
 os = darwin
 # variable set hash-table stats:
-# Load=104/1024=10%, Rehash=0, Collisions=3/155=2%
+# Load=106/1024=10%, Rehash=0, Collisions=3/157=2%
 
 # Pattern-specific Variable Values
 
@@ -262,6 +267,7 @@ catalog-push:
 #  Implicit rule search has not been done.
 #  File does not exist.
 #  File has not been updated.
+ 
 #  commands to execute (from `Makefile', line 203):
 	$(MAKE) docker-push IMG=$(CATALOG_IMG)
 	
@@ -291,7 +297,6 @@ opm:
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
 	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.15.1/$${OS}-$${ARCH}-opm ;\
 	chmod +x $(OPM) ;\
- 
 	}
 	
 
@@ -515,6 +520,6 @@ install: manifests kustomize
 # strcache size: total = 4096 / max = 4096 / min = 4096 / avg = 4096
 # strcache free: total = 4087 / max = 4087 / min = 4087 / avg = 4087
 
-# Finished Make data base on Tue Jan  4 01:17:02 2022
+# Finished Make data base on Mon Jan 17 20:57:38 2022
 
  
