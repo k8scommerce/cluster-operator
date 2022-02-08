@@ -22,7 +22,7 @@ spec:
   coreMicroServices:
     gatewayClient:
       name: gatewayclient
-      image: k8scommerce/client:latest
+      image: localhost:5000/client:latest
       port: 8888
       livenessProbe:
         initialDelaySeconds: 5
@@ -35,7 +35,7 @@ spec:
 
     gatewayAdmin:
       name: gatewayadmin
-      image: k8scommerce/admin:latest
+      image: localhost:5000/admin:latest
       port: 8888
       livenessProbe:
         initialDelaySeconds: 5
@@ -48,51 +48,51 @@ spec:
 
     cart:
       name: cart
-      image: k8scommerce/cart:latest
+      image: localhost:5000/cart:latest
 
     customer:
       name: customer
-      image: k8scommerce/customer:latest
+      image: localhost:5000/customer:latest
 
     email:
       name: email
-      image: k8scommerce/email:latest
+      image: localhost:5000/email:latest
 
     inventory:
       name: inventory
-      image: k8scommerce/inventory:latest
+      image: localhost:5000/inventory:latest
 
     othersBought:
       name: othersbought
-      image: k8scommerce/othersbought:latest
+      image: localhost:5000/othersbought:latest
 
     payment:
       name: payment
-      image: k8scommerce/payment:latest
+      image: localhost:5000/payment:latest
 
     product:
       name: product
-      image: k8scommerce/product:latest
+      image: localhost:5000/product:latest
 
     shipping:
       name: shipping
-      image: k8scommerce/shipping:latest
+      image: localhost:5000/shipping:latest
 
     similarProducts:
       name: similarproducts
-      image: k8scommerce/similarproducts:latest
+      image: localhost:5000/similarproducts:latest
 
     store:
       name: store
-      image: k8scommerce/store:latest
+      image: localhost:5000/store:latest
 
     user:
       name: user
-      image: k8scommerce/user:latest
+      image: localhost:5000/user:latest
 
     warehouse:
       name: warehouse
-      image: k8scommerce/warehouse:latest
+      image: localhost:5000/warehouse:latest
 
   etcd:
     replicas: 3
